@@ -1,11 +1,11 @@
-package net.kvibe
+package net.kvibews
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class KvibeApplication
+class KvibeWsApplication
 
 fun main(args: Array<String>) {
-	runApplication<KvibeApplication>(*args)
+	runApplication<KvibeWsApplication>(*args)
 }
