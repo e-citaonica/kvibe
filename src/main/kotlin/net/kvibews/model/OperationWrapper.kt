@@ -1,14 +1,11 @@
 package net.kvibews.model
 
-import net.kvibews.model.enum.OperationType
+import com.fasterxml.jackson.annotation.JsonProperty
 
 
-class OperationWrapper(
-    val docId: String,
-    val revision: Int,
-    val performedBy: String,
-    val operation: TextOperation
-) {
-    constructor() : this("", 0, "", TextOperation(OperationType.INSERT, "", 0)) {
-    }
-}
+data class OperationWrapper(
+    @JsonProperty("docId") val docId: String,
+    @JsonProperty("revision") val revision: Int,
+    @JsonProperty("performedBy") val performedBy: String,
+    @JsonProperty("operation") val operation: TextOperation
+)

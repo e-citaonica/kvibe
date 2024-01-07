@@ -4,8 +4,8 @@ import net.kvibews.model.TextOperation
 import net.kvibews.operation_transformations.OperationTransformations
 import org.springframework.stereotype.Component
 
-@Component
-class CharSequenceOperationTransformations : OperationTransformations {
+@Component("string")
+class StringOperationTransformations : OperationTransformations {
 
     override fun transform(op1: TextOperation, op2: TextOperation): List<TextOperation> {
         return if (op1.operationIsInsert() && op2.operationIsInsert())

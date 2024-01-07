@@ -1,11 +1,12 @@
 package net.kvibews.model
 
-import net.kvibews.model.enum.OperationType
+import com.fasterxml.jackson.annotation.JsonProperty
+import net.kvibews.enum.OperationType
 
-class TextOperation(
-    val opType: OperationType,
-    val operand: String,
-    val position: Int
+data class TextOperation(
+    @JsonProperty("type") val opType: OperationType,
+    @JsonProperty("operand") val operand: String,
+    @JsonProperty("position") val position: Int
 ) {
     fun operationIsInsert(): Boolean {
        return opType == OperationType.INSERT

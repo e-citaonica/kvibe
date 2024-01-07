@@ -7,38 +7,44 @@ import com.corundumstudio.socketio.listener.ConnectListener
 import com.corundumstudio.socketio.listener.DataListener
 import com.corundumstudio.socketio.listener.DisconnectListener
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import net.kvibews.handler.event.CursorPosition
 import net.kvibews.model.OperationWrapper
 import net.kvibews.service.DocumentService
+import net.kvibews.service.EventRelayService
 import org.slf4j.Logger
 import org.springframework.stereotype.Component
 
+object EventName {
+    const val OPERATION = "operation"
+    const val CURSOR_POSITION = "cursor_position"
+}
 
 @Component
 class WebSocketHandler(
     socketIOServer: SocketIOServer,
     val documentService: DocumentService,
+    val eventRelayService: EventRelayService,
     val objectMapper: ObjectMapper,
     val logger: Logger
 ) {
+
     init {
         socketIOServer.addConnectListener(onConnected())
         socketIOServer.addDisconnectListener(onDisconnected())
-        socketIOServer.addEventListener("operation", String::class.java, operationEvent())
-        socketIOServer.addEventListener("cursor_position", String::class.java, cursorPositionEvent())
+        socketIOServer.addEventListener(EventName.OPERATION, OperationWrapper::class.java, operationEvent())
+        socketIOServer.addEventListener(EventName.CURSOR_POSITION, String::class.java, cursorPositionEvent())
     }
 
-    private fun operationEvent(): DataListener<String> {
-        return DataListener { senderClient: SocketIOClient, data: String, _: AckRequest? ->
-            logger.info("operation_performed")
-            documentService.performOperation(objectMapper.readValue(data, OperationWrapper::class.java))
+    private fun operationEvent(): DataListener<OperationWrapper> {
+        return DataListener { _, data, _ ->
+            documentService.performOperation(data)
         }
     }
 
     private fun cursorPositionEvent(): DataListener<String> {
-        return DataListener { senderClient: SocketIOClient?, data: String, a: AckRequest? ->
-            logger.info("cursor_position")
-//            senderClient.get
-//            socketService.sendMessage(data.getRoom(), "get_message", senderClient, data.getMessage())
+        return DataListener { _, data, _ ->
+            eventRelayService.relay(objectMapper.readValue<CursorPosition>(data))
         }
     }
 
@@ -62,3 +68,4 @@ class WebSocketHandler(
     }
 
 }
+

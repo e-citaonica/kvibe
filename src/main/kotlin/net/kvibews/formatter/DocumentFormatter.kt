@@ -1,7 +1,7 @@
 package net.kvibews.formatter
 
 import net.kvibews.model.TextOperation
-import net.kvibews.model.enum.OperationType
+import net.kvibews.enum.OperationType
 import org.springframework.stereotype.Component
 
 

@@ -6,13 +6,17 @@ import org.springframework.context.annotation.Configuration
 
 
 @Configuration
-class SocketIOServerConfig(val socketIOProperties: SocketIOProperties) {
+class SocketIOConfig(val socketIOProperties: SocketIOProperties) {
 
     @Bean
     fun socketIOServer(): SocketIOServer {
         val config = com.corundumstudio.socketio.Configuration()
         config.hostname = socketIOProperties.host
         config.port = socketIOProperties.port
-        return SocketIOServer(config)
+
+        val socketIOServer = SocketIOServer(config)
+        socketIOServer.start()
+
+        return socketIOServer
     }
 }

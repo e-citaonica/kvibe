@@ -1,4 +1,4 @@
-package net.kvibews.model.dto
+package net.kvibews.dto
 
 data class DocumentCreationResponse(
     val docId: String
