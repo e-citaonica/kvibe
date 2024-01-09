@@ -2,7 +2,6 @@ package net.kvibews.formatter
 
 import net.kvibews.model.TextOperation
 import net.kvibews.enum.OperationType
-import org.springframework.stereotype.Component
 
 
 class DocumentFormatter {
@@ -10,7 +9,7 @@ class DocumentFormatter {
     private var buffer = StringBuffer()
 
     fun applyOperation(operation: TextOperation): String {
-        return when (operation.opType) {
+        return when (operation.type) {
             OperationType.INSERT -> applyInsert(operation)
             OperationType.DELETE -> applyDelete(operation)
         }
@@ -36,7 +35,7 @@ class DocumentFormatter {
 
     private fun applyDelete(operation: TextOperation): String {
         val start = operation.position
-        val end = start + operation.operand.length
+        val end = start + operation.length
         buffer.delete(start, end)
         return buffer.toString()
     }

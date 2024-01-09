@@ -4,15 +4,16 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import net.kvibews.enum.OperationType
 
 data class TextOperation(
-    @JsonProperty("type") val opType: OperationType,
-    @JsonProperty("operand") val operand: String,
-    @JsonProperty("position") val position: Int
+    @JsonProperty("type") val type: OperationType,
+    @JsonProperty("operand") val operand: String?,
+    @JsonProperty("position") val position: Int,
+    @JsonProperty("length") val length: Int
 ) {
-    fun operationIsInsert(): Boolean {
-       return opType == OperationType.INSERT
+    fun isInsert(): Boolean {
+       return type == OperationType.INSERT
     }
 
-    fun operationIsDelete(): Boolean {
-        return opType == OperationType.DELETE
+    fun isDelete(): Boolean {
+        return type == OperationType.DELETE
     }
 }
