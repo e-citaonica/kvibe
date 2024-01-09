@@ -7,8 +7,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.reactive.CorsConfigurationSource
-import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
@@ -16,7 +16,7 @@ class SecurityConfig {
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource = CorsConfiguration()
-        .apply { allowedOrigins = listOf("http://localhost:4200") }
+        .apply { allowedOrigins = listOf("*") }
         .apply { allowedMethods = listOf("*") }
         .apply { allowedHeaders = listOf("*") }
         .let { corsConfig ->
@@ -27,8 +27,8 @@ class SecurityConfig {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http {
-            cors { disable() }
-            csrf { }
+            cors { }
+            csrf { disable() }
             authorizeRequests {
                 authorize("/**", permitAll)
             }
