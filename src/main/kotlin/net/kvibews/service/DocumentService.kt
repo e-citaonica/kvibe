@@ -67,14 +67,14 @@ class DocumentService(
             document = applyTransformation(document, operationWrapper.operation)
         }
 
-        documentRedisRepository.setDocument(document.docId, document)
+        documentRedisRepository.setDocument(document.id, document)
     }
 
     fun applyTransformation(doc: Document, operation: TextOperation): Document {
         val toMutableList = doc.operations.toMutableList()
         toMutableList.add(operation)
         val updateContent = updateContent(doc.content, operation)
-        return Document(doc.docId, doc.revision + 1, updateContent, toMutableList)
+        return Document(doc.id, doc.revision + 1, updateContent, toMutableList)
     }
 
     fun updateContent(content: String, operation: TextOperation): String {
