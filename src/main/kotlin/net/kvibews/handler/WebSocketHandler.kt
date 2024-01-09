@@ -1,6 +1,5 @@
 package net.kvibews.handler
 
-import com.corundumstudio.socketio.AckRequest
 import com.corundumstudio.socketio.SocketIOClient
 import com.corundumstudio.socketio.SocketIOServer
 import com.corundumstudio.socketio.listener.ConnectListener
@@ -12,7 +11,6 @@ import net.kvibews.handler.event.CursorPosition
 import net.kvibews.model.OperationWrapper
 import net.kvibews.service.DocumentService
 import net.kvibews.service.EventRelayService
-import org.slf4j.Logger
 import org.springframework.stereotype.Component
 
 object EventName {
@@ -25,8 +23,7 @@ class WebSocketHandler(
     socketIOServer: SocketIOServer,
     val documentService: DocumentService,
     val eventRelayService: EventRelayService,
-    val objectMapper: ObjectMapper,
-    val logger: Logger
+    val objectMapper: ObjectMapper
 ) {
 
     init {
