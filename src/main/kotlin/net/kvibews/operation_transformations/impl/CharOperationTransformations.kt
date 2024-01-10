@@ -1,5 +1,6 @@
 package net.kvibews.operation_transformations.impl
 
+import net.kvibews.enum.OperationType
 import net.kvibews.model.TextOperation
 import net.kvibews.operation_transformations.OperationTransformations
 import org.slf4j.Logger
@@ -9,13 +10,13 @@ import org.springframework.stereotype.Component
 class CharOperationTransformations(val logger: Logger): OperationTransformations {
 
     override fun transform(op1: TextOperation, op2: TextOperation): List<TextOperation> {
-        return if (op1.isInsert() && op2.isInsert()) {
+        return if (op1.type == OperationType.INSERT && op2.type == OperationType.INSERT) {
             listOf(transformII(op1, op2))
-        } else if (op1.isInsert() && op2.isDelete()) {
+        } else if (op1.type == OperationType.INSERT && op2.type == OperationType.DELETE) {
             listOf(transformID(op1, op2))
-        } else if (op1.isDelete() && op2.isInsert()) {
+        } else if (op1.type == OperationType.DELETE && op2.type == (OperationType.INSERT)) {
             listOf(transformDI(op1, op2))
-        } else if (op1.isDelete() && op2.isDelete()) {
+        } else if (op1.type == OperationType.DELETE && op2.type == OperationType.DELETE) {
             transformDD(op1, op2)?.let {
                 return listOf(it)
             } ?: emptyList()

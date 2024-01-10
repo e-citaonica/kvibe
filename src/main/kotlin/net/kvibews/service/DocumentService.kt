@@ -35,7 +35,7 @@ class DocumentService(
     }
 
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-    fun performOperation(operationWrapper: OperationWrapper) {
+    fun performOperation(operationWrapper: OperationWrapper): Int {
         var document = requireNotNull(documentRedisRepository.getDocument(operationWrapper.docId))
 
         val currentRevision = document.revision
@@ -66,8 +66,9 @@ class DocumentService(
             )
             document = applyTransformation(document, operationWrapper.operation)
         }
-
         documentRedisRepository.setDocument(document.id, document)
+
+        return document.revision
     }
 
     fun applyTransformation(doc: Document, operation: TextOperation): Document {

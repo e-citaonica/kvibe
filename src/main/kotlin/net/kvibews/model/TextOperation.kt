@@ -9,11 +9,4 @@ data class TextOperation(
     @JsonProperty("position") val position: Int,
     @JsonProperty("length") val length: Int
 ) {
-    fun isInsert(): Boolean {
-       return type == OperationType.INSERT
-    }
-
-    fun isDelete(): Boolean {
-        return type == OperationType.DELETE
-    }
 }

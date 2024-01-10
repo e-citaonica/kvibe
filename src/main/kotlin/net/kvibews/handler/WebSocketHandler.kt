@@ -7,6 +7,7 @@ import com.corundumstudio.socketio.listener.DataListener
 import com.corundumstudio.socketio.listener.DisconnectListener
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import net.kvibews.dto.OperationAckMessage
 import net.kvibews.handler.event.CursorPosition
 import net.kvibews.model.OperationWrapper
 import net.kvibews.service.DocumentService
@@ -34,8 +35,9 @@ class WebSocketHandler(
     }
 
     private fun operationEvent(): DataListener<OperationWrapper> {
-        return DataListener { _, data, _ ->
-            documentService.performOperation(data)
+        return DataListener { _, data, ackData ->
+            val performOperation = documentService.performOperation(data)
+            ackData.sendAckData(OperationAckMessage(revision = performOperation))
         }
     }
 
