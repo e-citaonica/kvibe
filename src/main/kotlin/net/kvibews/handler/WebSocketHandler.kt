@@ -35,15 +35,15 @@ class WebSocketHandler(
     }
 
     private fun operationEvent(): DataListener<OperationWrapper> {
-        return DataListener { _, data, ackData ->
-            val performOperation = documentService.performOperation(data)
+        return DataListener { socketIOClient, data, ackData ->
+            val performOperation = documentService.performOperation(data, socketIOClient)
             ackData.sendAckData(OperationAckMessage(revision = performOperation))
         }
     }
 
     private fun cursorPositionEvent(): DataListener<String> {
-        return DataListener { _, data, _ ->
-            eventRelayService.relay(objectMapper.readValue<CursorPosition>(data))
+        return DataListener { socketIOClient, data, _ ->
+            eventRelayService.relay(objectMapper.readValue<CursorPosition>(data), socketIOClient)
         }
     }
 

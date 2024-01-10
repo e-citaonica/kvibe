@@ -1,5 +1,6 @@
 package net.kvibews.service
 
+import com.corundumstudio.socketio.SocketIOClient
 import net.kvibews.formatter.DocumentFormatter
 import net.kvibews.model.Document
 import net.kvibews.model.OperationWrapper
@@ -35,7 +36,7 @@ class DocumentService(
     }
 
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-    fun performOperation(operationWrapper: OperationWrapper): Int {
+    fun performOperation(operationWrapper: OperationWrapper, socketIOClient: SocketIOClient): Int {
         var document = requireNotNull(documentRedisRepository.getDocument(operationWrapper.docId))
 
         val currentRevision = document.revision
@@ -49,9 +50,9 @@ class DocumentService(
                     OperationWrapper(
                         operationWrapper.docId,
                         currentRevision + 1,
-                        operationWrapper.performedBy,
+                        operationWrapper.ackTo,
                         it
-                    )
+                    ), socketIOClient
                 )
                 document = applyTransformation(document, it)
             }
@@ -60,9 +61,10 @@ class DocumentService(
                 OperationWrapper(
                     operationWrapper.docId,
                     currentRevision + 1,
-                    operationWrapper.performedBy,
+                    operationWrapper.ackTo,
                     operationWrapper.operation
-                )
+                ),
+                socketIOClient
             )
             document = applyTransformation(document, operationWrapper.operation)
         }

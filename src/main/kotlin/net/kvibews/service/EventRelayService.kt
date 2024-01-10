@@ -1,5 +1,6 @@
 package net.kvibews.service
 
+import com.corundumstudio.socketio.SocketIOClient
 import com.corundumstudio.socketio.SocketIOServer
 import com.fasterxml.jackson.databind.ObjectMapper
 import net.kvibews.handler.EventName
@@ -10,11 +11,12 @@ import org.springframework.stereotype.Service
 @Service
 class EventRelayService(val socketIOServer: SocketIOServer, val objectMapper: ObjectMapper) {
 
-    fun relay(operation: OperationWrapper) {
-        socketIOServer.getRoomOperations(operation.docId).sendEvent(EventName.OPERATION, objectMapper.writeValueAsString(operation))
+    fun relay(operation: OperationWrapper, socketIOClient: SocketIOClient) {
+        socketIOServer.getRoomOperations(operation.docId)
+            .sendEvent(EventName.OPERATION, socketIOClient, objectMapper.writeValueAsString(operation))
     }
 
-    fun relay(cursorPosition: CursorPosition) {
+    fun relay(cursorPosition: CursorPosition, socketIOClient: SocketIOClient) {
         socketIOServer.getRoomOperations(cursorPosition.roomId).sendEvent(EventName.CURSOR_POSITION, objectMapper.writeValueAsString(cursorPosition))
     }
 }
