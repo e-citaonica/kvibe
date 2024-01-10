@@ -1,7 +1,7 @@
 package net.kvibews.dto
 
 data class DocumentCreationModel(
-    val documentName: String,
+    val name: String,
     val language: String,
     val username: String
 )
