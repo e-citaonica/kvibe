@@ -36,16 +36,18 @@ class DocumentService(
     }
 
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-    fun performOperation(operationWrapper: OperationWrapper, socketIOClient: SocketIOClient): Int {
+    fun performOperation(operationWrapper: OperationWrapper, socketIOClient: SocketIOClient): Pair<Int, List<TextOperation>> {
         var document = requireNotNull(documentRedisRepository.getDocument(operationWrapper.docId))
 
         val currentRevision = document.revision
         val eventRevision = operationWrapper.revision
 
-        if (eventRevision < currentRevision) {
-            val transformedOperation = transformOperationAgainstRevisionLogs(document, operationWrapper)
+        var transformedOperations = listOf<TextOperation>();
 
-            transformedOperation.forEach {
+        if (eventRevision < currentRevision) {
+            transformedOperations = transformOperationAgainstRevisionLogs(document, operationWrapper)
+
+            transformedOperations.forEach {
                 eventRelayService.relay(
                     OperationWrapper(
                         operationWrapper.docId,
@@ -70,7 +72,7 @@ class DocumentService(
         }
         documentRedisRepository.setDocument(document.id, document)
 
-        return document.revision
+        return Pair(document.revision, transformedOperations)
     }
 
     fun applyTransformation(doc: Document, operation: TextOperation): Document {

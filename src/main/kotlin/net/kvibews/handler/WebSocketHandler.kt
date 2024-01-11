@@ -8,15 +8,17 @@ import com.corundumstudio.socketio.listener.DisconnectListener
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import net.kvibews.dto.OperationAckMessage
-import net.kvibews.handler.event.CursorPosition
+import net.kvibews.enum.OperationType
+import net.kvibews.handler.event.Selection
 import net.kvibews.model.OperationWrapper
+import net.kvibews.model.TextOperation
 import net.kvibews.service.DocumentService
 import net.kvibews.service.EventRelayService
 import org.springframework.stereotype.Component
 
 object EventName {
     const val OPERATION = "operation"
-    const val CURSOR_POSITION = "cursor_position"
+    const val SELECTION = "selection"
 }
 
 @Component
@@ -31,19 +33,36 @@ class WebSocketHandler(
         socketIOServer.addConnectListener(onConnected())
         socketIOServer.addDisconnectListener(onDisconnected())
         socketIOServer.addEventListener(EventName.OPERATION, OperationWrapper::class.java, operationEvent())
-        socketIOServer.addEventListener(EventName.CURSOR_POSITION, String::class.java, cursorPositionEvent())
+        socketIOServer.addEventListener(EventName.SELECTION, String::class.java, selectionEvent())
     }
 
     private fun operationEvent(): DataListener<OperationWrapper> {
-        return DataListener { socketIOClient, data, ackData ->
-            val performOperation = documentService.performOperation(data, socketIOClient)
-            ackData.sendAckData(OperationAckMessage(revision = performOperation))
+        return DataListener { socketIOClient, operationWrapper, ack ->
+            val (revision, transformedOps) = documentService.performOperation(operationWrapper, socketIOClient)
+            ack.sendAckData(OperationAckMessage(revision))
         }
     }
 
-    private fun cursorPositionEvent(): DataListener<String> {
-        return DataListener { socketIOClient, data, _ ->
-            eventRelayService.relay(objectMapper.readValue<CursorPosition>(data), socketIOClient)
+    private fun selectionEvent(): DataListener<String> {
+        return DataListener { socketIOClient, cursorPosition, _ ->
+            val selection = objectMapper.readValue<Selection>(cursorPosition)
+
+            val (revision, transformedOps) = documentService.performOperation(
+                OperationWrapper(
+                    selection.docId, 0, selection.performedBy,
+                    TextOperation(OperationType.DELETE, "", selection.from, selection.to - selection.from + 1)
+                ), socketIOClient
+            )
+
+            // TODO: return transformed cursor pos
+            eventRelayService.relay(
+                Selection(
+                    selection.docId,
+                    transformedOps[0].position,
+                    transformedOps[0].position + transformedOps[0].length,
+                    selection.performedBy
+                ), socketIOClient
+            )
         }
     }
 
