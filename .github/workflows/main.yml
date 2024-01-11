@@ -23,8 +23,7 @@ jobs:
           java-version: '17'
 
       - name: Build jar
-        if: success() # only runs if all tests pass
-        run: ./gradlew bootJar # mvn package work just fine for maven
+        run: ./gradlew bootJar
     
       - name: Docker Metadata action
         id: meta
