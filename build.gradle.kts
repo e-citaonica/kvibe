@@ -18,15 +18,28 @@ repositories {
     mavenCentral()
 }
 
+object Versions {
+    const val coroutines = "1.7.3"
+//    const val logging = "5.1.0"
+    const val openApiStarter = "2.3.0"
+    const val redissonStarter = "3.25.2"
+    const val socketIo = "2.0.6"
+}
+
 dependencies {
-//	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.+")
+    implementation("com.corundumstudio.socketio:netty-socketio:${Versions.socketIo}")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${Versions.openApiStarter}")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${Versions.coroutines}")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-//	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.springframework.security:spring-security-test")
 }
 
 tasks.withType<KotlinCompile> {

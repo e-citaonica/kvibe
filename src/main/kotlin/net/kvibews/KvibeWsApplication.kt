@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class KvibeWsApplication
 
 fun main(args: Array<String>) {
-	runApplication<KvibeWsApplication>(*args)
+    runApplication<KvibeWsApplication>(*args)
 }

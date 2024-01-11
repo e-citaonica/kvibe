@@ -1,1 +1,1 @@
-rootProject.name = "kvibews"
+rootProject.name = "kvibe-ws"
