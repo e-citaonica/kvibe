@@ -55,3 +55,10 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Notify .NET API webhook listener
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{ "Token": "${{ secrets.WEB_HOOK_LISTENER_TKN }}", "Tags": "${{ steps.meta.outputs.tags }}" }' \
+            ${{ vars.WEB_HOOK_LISTENER_ENDPOINT }}
