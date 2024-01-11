@@ -25,7 +25,7 @@ class DocumentService(
 
     fun createDocument(documentCreationModel: DocumentCreationModel): Document {
         val randomUUID = UUID.randomUUID().toString()
-        val document = Document(randomUUID, 0, "", emptyList())
+        val document = Document(randomUUID, documentCreationModel.name, 0, "", emptyList())
         documentRedisRepository.setDocument(randomUUID, document)
         return document
     }
@@ -77,7 +77,7 @@ class DocumentService(
         val toMutableList = doc.operations.toMutableList()
         toMutableList.add(operation)
         val updateContent = updateContent(doc.content, operation)
-        return Document(doc.id, doc.revision + 1, updateContent, toMutableList)
+        return Document(doc.id, doc.name, doc.revision + 1, updateContent, toMutableList)
     }
 
     fun updateContent(content: String, operation: TextOperation): String {
