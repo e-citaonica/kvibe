@@ -50,7 +50,7 @@ class DocumentService(
                     OperationWrapper(
                         operationWrapper.docId,
                         currentRevision + 1,
-                        operationWrapper.ackTo,
+                        operationWrapper.performedBy,
                         it
                     ), socketIOClient
                 )
@@ -61,7 +61,7 @@ class DocumentService(
                 OperationWrapper(
                     operationWrapper.docId,
                     currentRevision + 1,
-                    operationWrapper.ackTo,
+                    operationWrapper.performedBy,
                     operationWrapper.operation
                 ),
                 socketIOClient
