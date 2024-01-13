@@ -119,8 +119,8 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
         // delete is inside of selection
         else if (op.position >= selection.from) {
             val overlapFromStartOfSelection = op.position - selection.from
-
+            selection
         }
-        else return selection
+        else selection
     }
 }

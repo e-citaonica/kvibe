@@ -9,9 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import net.kvibews.dto.OperationAckMessage
 import net.kvibews.enum.OperationType
-import net.kvibews.handler.event.Selection
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextOperation
+import net.kvibews.model.TextSelection
 import net.kvibews.service.DocumentService
 import net.kvibews.service.EventRelayService
 import org.springframework.stereotype.Component
@@ -45,7 +45,7 @@ class WebSocketHandler(
 
     private fun selectionEvent(): DataListener<String> {
         return DataListener { socketIOClient, cursorPosition, _ ->
-            val selection = objectMapper.readValue<Selection>(cursorPosition)
+            val selection = objectMapper.readValue<TextSelection>(cursorPosition)
 
             val (revision, transformedOps) = documentService.performOperation(
                 OperationWrapper(
@@ -56,7 +56,7 @@ class WebSocketHandler(
 
             // TODO: return transformed cursor pos
             eventRelayService.relay(
-                Selection(
+                TextSelection(
                     selection.docId,
                     transformedOps[0].position,
                     transformedOps[0].position + transformedOps[0].length,
