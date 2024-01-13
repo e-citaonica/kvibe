@@ -15,8 +15,8 @@ class DocumentController(val documentService: DocumentService) {
         return ResponseEntity.ok(documentService.createDocument(document))
     }
 
-    @GetMapping("/{documentId}")
-    fun getDoc(@PathVariable documentId: String): Document {
-        return documentService.getDocument(documentId)
+    @GetMapping("/{id}")
+    fun getDoc(@PathVariable id: String): Document {
+        return documentService.getDocument(id)
     }
 }
