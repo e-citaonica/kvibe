@@ -2,6 +2,7 @@ package net.kvibews.operation_transformations.impl
 
 import net.kvibews.enum.OperationType
 import net.kvibews.model.TextOperation
+import net.kvibews.model.TextSelection
 import net.kvibews.operation_transformations.OperationTransformations
 import org.slf4j.Logger
 import org.springframework.stereotype.Component
@@ -52,15 +53,15 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
             if (op1End < op2.position) {
                 listOf(TextOperation(op1.type, op1.operand, op1.position, op1.length))
             } else {
-                    val leftLength = op2.position - op1.position
-                    val rightLength = op1.length - op2.position + op1.position
-                    val left = op1.operand?.substring(0, leftLength)
-                    val right = op1.operand?.substring(leftLength)
+                val leftLength = op2.position - op1.position
+                val rightLength = op1.length - op2.position + op1.position
+                val left = op1.operand?.substring(0, leftLength)
+                val right = op1.operand?.substring(leftLength)
 
-                    listOf(
-                        TextOperation(op1.type, left, op1.position, op2.position - op1.position),
-                        TextOperation(op1.type, right, op1.position + leftLength + op2.length, rightLength)
-                    )
+                listOf(
+                    TextOperation(op1.type, left, op1.position, op2.position - op1.position),
+                    TextOperation(op1.type, right, op1.position + leftLength + op2.length, rightLength)
+                )
             }
         } else {
             listOf(TextOperation(op1.type, op1.operand, op1.position + op2.length, op1.length))
@@ -88,4 +89,38 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
         }
     }
 
+    private fun transformSI(selection: TextSelection, op: TextOperation): TextSelection {
+        // text inserted inside selection => extend selection by text length
+        return if (op.position >= selection.from && op.position < selection.to) {
+            TextSelection(selection.docId, selection.from, selection.to + op.length, selection.performedBy)
+        }
+        // selection left of insert or text inserted after selection
+        // OR selection starts before insert and ends inside insert
+        else selection
+    }
+
+    private fun transformSD(selection: TextSelection, op: TextOperation): TextSelection {
+        val opEnd = op.position + op.length - 1
+
+        // delete starts and ends before selection
+        return if (opEnd <= selection.from) {
+            TextSelection(selection.docId, selection.from - op.length, selection.to - op.length, selection.performedBy)
+        }
+        // delete starts before selection and ends in middle of selection
+        else if (op.position < selection.from && opEnd > selection.from && opEnd < selection.to) {
+            val overlapFromStartOfSelection = selection.from - op.position;
+            TextSelection(
+                selection.docId,
+                selection.from - (op.length - overlapFromStartOfSelection),
+                selection.to - overlapFromStartOfSelection,
+                selection.performedBy
+            )
+        }
+        // delete is inside of selection
+        else if (op.position >= selection.from) {
+            val overlapFromStartOfSelection = op.position - selection.from
+
+        }
+        else return selection
+    }
 }

@@ -9,7 +9,6 @@ import net.kvibews.dto.DocumentCreationModel
 import net.kvibews.exception.DocumentNotFoundException
 import net.kvibews.operation_transformations.OperationTransformations
 import net.kvibews.repository.DocumentRedisRepository
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
@@ -21,23 +20,14 @@ import java.util.*
 class DocumentService(
     val documentRedisRepository: DocumentRedisRepository,
     val eventRelayService: EventRelayService,
-    val logger: Logger,
     @Qualifier("string") val operationTransformations: OperationTransformations
 ) {
 
     fun createDocument(documentCreationModel: DocumentCreationModel): Document {
         val randomUUID = UUID.randomUUID().toString()
-        val document = Document(randomUUID, 0, "", emptyList(), emptyList())
+        val document = Document(randomUUID, documentCreationModel.name, 0, "", emptyList())
         documentRedisRepository.setDocument(randomUUID, document)
         return document
-    }
-
-    fun subscribe(docId: String, user: String) {
-
-    }
-
-    fun unsubscribe(docId: String, user: String) {
-
     }
 
     fun getDocument(documentId: String): Document {
@@ -45,23 +35,24 @@ class DocumentService(
         return document ?: throw DocumentNotFoundException(documentId)
     }
 
-    @Synchronized
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-    fun performOperation(operationWrapper: OperationWrapper, socketIOClient: SocketIOClient): Int {
+    fun performOperation(operationWrapper: OperationWrapper, socketIOClient: SocketIOClient): Pair<Int, List<TextOperation>> {
         var document = requireNotNull(documentRedisRepository.getDocument(operationWrapper.docId))
 
         val currentRevision = document.revision
         val eventRevision = operationWrapper.revision
 
-        if (eventRevision < currentRevision) {
-            val transformedOperation = transformOperationAgainstRevisionLogs(document, operationWrapper)
+        var transformedOperations = listOf<TextOperation>();
 
-            transformedOperation.forEach {
+        if (eventRevision < currentRevision) {
+            transformedOperations = transformOperationAgainstRevisionLogs(document, operationWrapper)
+
+            transformedOperations.forEach {
                 eventRelayService.relay(
                     OperationWrapper(
                         operationWrapper.docId,
                         currentRevision + 1,
-                        operationWrapper.ackTo,
+                        operationWrapper.performedBy,
                         it
                     ), socketIOClient
                 )
@@ -72,7 +63,7 @@ class DocumentService(
                 OperationWrapper(
                     operationWrapper.docId,
                     currentRevision + 1,
-                    operationWrapper.ackTo,
+                    operationWrapper.performedBy,
                     operationWrapper.operation
                 ),
                 socketIOClient
@@ -81,14 +72,14 @@ class DocumentService(
         }
         documentRedisRepository.setDocument(document.id, document)
 
-        return document.revision
+        return Pair(document.revision, transformedOperations)
     }
 
     fun applyTransformation(doc: Document, operation: TextOperation): Document {
         val toMutableList = doc.operations.toMutableList()
         toMutableList.add(operation)
         val updateContent = updateContent(doc.content, operation)
-        return Document(doc.id, doc.revision + 1, updateContent, toMutableList, emptyList())
+        return Document(doc.id, doc.name, doc.revision + 1, updateContent, toMutableList)
     }
 
     fun updateContent(content: String, operation: TextOperation): String {
