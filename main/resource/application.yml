@@ -1,7 +1,0 @@
-spring:
-  application:
-    name: kvibe-ws
-  profiles:
-    active: development
-  config:
-    import: optional:configserver:${CLOUD_CONFIG_SERVER}
