@@ -19,11 +19,10 @@ repositories {
 }
 
 object Versions {
-    const val coroutines = "1.7.3"
-//    const val logging = "5.1.0"
-    const val openApiStarter = "2.3.0"
-    const val redissonStarter = "3.25.2"
-    const val socketIo = "2.0.6"
+    val coroutines = "1.7.3"
+    val openApiStarter = "2.3.0"
+    val redissonStarter = "3.25.2"
+    val socketIo = "2.0.6"
 }
 
 dependencies {
@@ -35,8 +34,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.+")
     implementation("com.corundumstudio.socketio:netty-socketio:${Versions.socketIo}")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${Versions.openApiStarter}")
-//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}")
-//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${Versions.coroutines}")
+    implementation("org.springframework.cloud:spring-cloud-starter-config:4.1.0")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
