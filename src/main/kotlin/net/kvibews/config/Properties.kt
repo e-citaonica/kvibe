@@ -9,7 +9,8 @@ import org.springframework.context.annotation.Configuration
 @ConfigurationProperties(prefix = "socket-io")
 data class SocketIOProperties(
     var host: String = "localhost",
-    var port: Int = 8080
+    var port: Int = 8080,
+    var origin: String? = null
 )
 
 @Configuration

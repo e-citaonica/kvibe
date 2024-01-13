@@ -13,6 +13,7 @@ class SocketIOConfig(val socketIOProperties: SocketIOProperties) {
         val config = com.corundumstudio.socketio.Configuration()
         config.hostname = socketIOProperties.host
         config.port = socketIOProperties.port
+        config.origin = socketIOProperties.origin
 
         val socketIOServer = SocketIOServer(config)
         socketIOServer.start()
