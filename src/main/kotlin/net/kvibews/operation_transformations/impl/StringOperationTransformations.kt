@@ -24,7 +24,7 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
     }
 
     private fun transformII(op1: TextOperation, op2: TextOperation): TextOperation {
-        logger.debug("DD op1:{} op2:{}", op1, op2)
+        logger.info("II op1:{} op2:{}", op1, op2)
         val newPos = if (op1.position < op2.position) {
             op1.position
         } else {
@@ -34,7 +34,7 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
     }
 
     private fun transformID(op1: TextOperation, op2: TextOperation): TextOperation {
-        logger.debug("ID op1:{} op2:{}", op1, op2)
+        logger.info("ID op1:{} op2:{}", op1, op2)
         val op2End = op2.position + op2.length - 1
         return if (op1.position <= op2.position) {
             TextOperation(op1.type, op1.operand, op1.position, op1.length)
@@ -46,7 +46,7 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
     }
 
     private fun transformDI(op1: TextOperation, op2: TextOperation): List<TextOperation> {
-        logger.debug("DI op1:{} op2:{}", op1, op2)
+        logger.info("DI op1:{} op2:{}", op1, op2)
         val op1End = op1.position + op1.length - 1
         return if (op1.position < op2.position) {
             if (op1End < op2.position) {
@@ -68,7 +68,7 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
     }
 
     private fun transformDD(op1: TextOperation, op2: TextOperation): TextOperation? {
-        logger.debug("DD op1:{} op2:{}", op1, op2)
+        logger.info("DD op1:{} op2:{}", op1, op2)
         val op1End = op1.position + op1.length - 1
         val op2End = op2.position + op2.length - 1
 

@@ -51,6 +51,7 @@ class WebSocketHandler(
     private fun onConnected(): ConnectListener {
         return ConnectListener { client: SocketIOClient ->
             val document = client.handshakeData.getSingleUrlParam("docId")
+//            documentService.subscribeToDocument()
             document?.let {
                 client.joinRoom(it)
             }

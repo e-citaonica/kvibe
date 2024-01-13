@@ -9,6 +9,7 @@ import net.kvibews.dto.DocumentCreationModel
 import net.kvibews.exception.DocumentNotFoundException
 import net.kvibews.operation_transformations.OperationTransformations
 import net.kvibews.repository.DocumentRedisRepository
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
@@ -20,14 +21,23 @@ import java.util.*
 class DocumentService(
     val documentRedisRepository: DocumentRedisRepository,
     val eventRelayService: EventRelayService,
+    val logger: Logger,
     @Qualifier("string") val operationTransformations: OperationTransformations
 ) {
 
     fun createDocument(documentCreationModel: DocumentCreationModel): Document {
         val randomUUID = UUID.randomUUID().toString()
-        val document = Document(randomUUID, 0, "", emptyList())
+        val document = Document(randomUUID, 0, "", emptyList(), emptyList())
         documentRedisRepository.setDocument(randomUUID, document)
         return document
+    }
+
+    fun subscribe(docId: String, user: String) {
+
+    }
+
+    fun unsubscribe(docId: String, user: String) {
+
     }
 
     fun getDocument(documentId: String): Document {
@@ -35,6 +45,7 @@ class DocumentService(
         return document ?: throw DocumentNotFoundException(documentId)
     }
 
+    @Synchronized
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
     fun performOperation(operationWrapper: OperationWrapper, socketIOClient: SocketIOClient): Int {
         var document = requireNotNull(documentRedisRepository.getDocument(operationWrapper.docId))
@@ -77,7 +88,7 @@ class DocumentService(
         val toMutableList = doc.operations.toMutableList()
         toMutableList.add(operation)
         val updateContent = updateContent(doc.content, operation)
-        return Document(doc.id, doc.revision + 1, updateContent, toMutableList)
+        return Document(doc.id, doc.revision + 1, updateContent, toMutableList, emptyList())
     }
 
     fun updateContent(content: String, operation: TextOperation): String {
