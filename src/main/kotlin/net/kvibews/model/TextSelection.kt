@@ -1,3 +1,10 @@
 package net.kvibews.model
 
-data class TextSelection(val docId: String, val from: Int, val to: Int, val performedBy: String)
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class TextSelection(
+    @JsonProperty("docId") val docId: String,
+    @JsonProperty("from") val from: Int,
+    @JsonProperty("to") val to: Int,
+    @JsonProperty("performedBy") val performedBy: String
+)

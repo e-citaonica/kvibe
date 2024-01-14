@@ -8,5 +8,4 @@ data class TextOperation(
     @JsonProperty("operand") val operand: String?,
     @JsonProperty("position") val position: Int,
     @JsonProperty("length") val length: Int
-) {
-}
+)

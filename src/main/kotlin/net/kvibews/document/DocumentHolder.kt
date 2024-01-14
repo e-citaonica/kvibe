@@ -1,4 +1,4 @@
-package net.kvibews.formatter
+package net.kvibews.document
 
 import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock
 import net.kvibews.exception.InvalidOperationRevision

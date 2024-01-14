@@ -1,4 +1,4 @@
-package net.kvibews.formatter
+package net.kvibews.document
 
 import net.kvibews.model.TextOperation
 import net.kvibews.enum.OperationType

@@ -1,15 +1,15 @@
 package net.kvibews.service
 
 import com.corundumstudio.socketio.SocketIOClient
+import net.kvibews.document.DocumentHolder
 import net.kvibews.dto.DocumentDTO
 import net.kvibews.exception.DocumentNotFoundException
-import net.kvibews.formatter.DocumentHolder
 import net.kvibews.model.DocumentState
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextOperation
 import net.kvibews.operation_transformations.OperationTransformations
 import net.kvibews.repository.DocumentRepository
-import org.redisson.api.RedissonClient
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.util.*
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
 class DocumentOperationHandlerService(
     val documentRepo: DocumentRepository,
     val eventDispatcherService: EventDispatcherService,
-    val redissonClient: RedissonClient,
+    val logger: Logger,
     @Qualifier("string") val operationTransformations: OperationTransformations
 ) {
     var documents = ConcurrentHashMap<String, DocumentHolder>()
@@ -86,8 +86,6 @@ class DocumentOperationHandlerService(
         val snapshot = document.getSnapshot()
         documentRepo.setDocumentAsync(snapshot.id, snapshot)
 
-        document.lock.updateLock().unlock()
-
         transformedOperations.forEach {
             eventDispatcherService.dispatch(
                 OperationWrapper(
@@ -98,6 +96,8 @@ class DocumentOperationHandlerService(
                 ), userSession
             )
         }
+
+        document.lock.updateLock().unlock()
 
         return Pair(snapshot.revision, transformedOperations)
     }

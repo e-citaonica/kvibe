@@ -14,6 +14,7 @@ import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection
 import net.kvibews.service.DocumentOperationHandlerService
 import net.kvibews.service.EventDispatcherService
+import org.springframework.expression.spel.ast.Selection
 import org.springframework.stereotype.Component
 
 object WsEventName {
@@ -33,7 +34,7 @@ class WebSocketHandler(
         socketIOServer.addConnectListener(onConnected())
         socketIOServer.addDisconnectListener(onDisconnected())
         socketIOServer.addEventListener(WsEventName.OPERATION, OperationWrapper::class.java, operationEvent())
-        socketIOServer.addEventListener(WsEventName.SELECTION, String::class.java, selectionEvent())
+        socketIOServer.addEventListener(WsEventName.SELECTION, TextSelection::class.java, selectionEvent())
     }
 
     private fun operationEvent(): DataListener<OperationWrapper> {
@@ -43,9 +44,8 @@ class WebSocketHandler(
         }
     }
 
-    private fun selectionEvent(): DataListener<String> {
-        return DataListener { socketIOClient, cursorPosition, _ ->
-            val selection = objectMapper.readValue<TextSelection>(cursorPosition)
+    private fun selectionEvent(): DataListener<TextSelection> {
+        return DataListener { socketIOClient, selection, _ ->
 
             val (_, transformedOps) = documentOperationHandlerService.transformAndApply(
                 OperationWrapper(
