@@ -1,5 +1,11 @@
 package net.kvibews.exception
 
+import kotlin.RuntimeException
+
 class DocumentNotFoundException(
     documentId: String
-) : Exception("Document with $documentId not found")
+) : RuntimeException("Document with $documentId not found")
+
+class InvalidOperationRevision(
+    message: String
+) : RuntimeException(message)

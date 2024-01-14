@@ -7,16 +7,16 @@ import com.corundumstudio.socketio.listener.DataListener
 import com.corundumstudio.socketio.listener.DisconnectListener
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import net.kvibews.dto.OperationAckMessage
+import net.kvibews.dto.OperationDTO
 import net.kvibews.enum.OperationType
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection
-import net.kvibews.service.DocumentService
-import net.kvibews.service.EventRelayService
+import net.kvibews.service.DocumentOperationHandlerService
+import net.kvibews.service.EventDispatcherService
 import org.springframework.stereotype.Component
 
-object EventName {
+object WsEventName {
     const val OPERATION = "operation"
     const val SELECTION = "selection"
 }
@@ -24,22 +24,22 @@ object EventName {
 @Component
 class WebSocketHandler(
     socketIOServer: SocketIOServer,
-    val documentService: DocumentService,
-    val eventRelayService: EventRelayService,
+    val documentOperationHandlerService: DocumentOperationHandlerService,
+    val eventDispatcherService: EventDispatcherService,
     val objectMapper: ObjectMapper
 ) {
 
     init {
         socketIOServer.addConnectListener(onConnected())
         socketIOServer.addDisconnectListener(onDisconnected())
-        socketIOServer.addEventListener(EventName.OPERATION, OperationWrapper::class.java, operationEvent())
-        socketIOServer.addEventListener(EventName.SELECTION, String::class.java, selectionEvent())
+        socketIOServer.addEventListener(WsEventName.OPERATION, OperationWrapper::class.java, operationEvent())
+        socketIOServer.addEventListener(WsEventName.SELECTION, String::class.java, selectionEvent())
     }
 
     private fun operationEvent(): DataListener<OperationWrapper> {
         return DataListener { socketIOClient, operationWrapper, ack ->
-            val (revision, transformedOps) = documentService.performOperation(operationWrapper, socketIOClient)
-            ack.sendAckData(OperationAckMessage(revision))
+            val (revision, _) = documentOperationHandlerService.transformAndApply(operationWrapper, socketIOClient)
+            ack.sendAckData(OperationDTO.AckMessage(revision))
         }
     }
 
@@ -47,15 +47,14 @@ class WebSocketHandler(
         return DataListener { socketIOClient, cursorPosition, _ ->
             val selection = objectMapper.readValue<TextSelection>(cursorPosition)
 
-            val (revision, transformedOps) = documentService.performOperation(
+            val (_, transformedOps) = documentOperationHandlerService.transformAndApply(
                 OperationWrapper(
                     selection.docId, 0, selection.performedBy,
                     TextOperation(OperationType.DELETE, "", selection.from, selection.to - selection.from + 1)
                 ), socketIOClient
             )
 
-            // TODO: return transformed cursor pos
-            eventRelayService.relay(
+            eventDispatcherService.dispatch(
                 TextSelection(
                     selection.docId,
                     transformedOps[0].position,
@@ -70,19 +69,19 @@ class WebSocketHandler(
     private fun onConnected(): ConnectListener {
         return ConnectListener { client: SocketIOClient ->
             val document = client.handshakeData.getSingleUrlParam("docId")
-//            documentService.subscribeToDocument()
             document?.let {
+                documentOperationHandlerService.joinDocument(it, client.sessionId.toString())
                 client.joinRoom(it)
             }
         }
     }
 
-    private fun onDisconnected(): DisconnectListener? {
+    private fun onDisconnected(): DisconnectListener {
         return DisconnectListener { client: SocketIOClient ->
-//            log.info(
-//                "Client[{}] - Disconnected from socket",
-//                client.sessionId.toString()
-//            )
+            val document = client.handshakeData.getSingleUrlParam("docId")
+            document?.let {
+                documentOperationHandlerService.leaveDocument(document, client.sessionId.toString())
+            }
         }
     }
 

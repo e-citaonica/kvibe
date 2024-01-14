@@ -5,6 +5,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.4"
     kotlin("jvm") version "1.9.21"
     kotlin("plugin.spring") version "1.9.21"
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 group = "net"
@@ -26,18 +27,19 @@ object Versions {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.redisson:redisson:3.21.3")
+    implementation("com.googlecode.concurrent-locks:concurrent-locks:1.0.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.+")
     implementation("com.corundumstudio.socketio:netty-socketio:${Versions.socketIo}")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${Versions.openApiStarter}")
     implementation("org.springframework.cloud:spring-cloud-starter-config:4.1.0")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.security:spring-security-test")
 }
 
 tasks.withType<KotlinCompile> {
