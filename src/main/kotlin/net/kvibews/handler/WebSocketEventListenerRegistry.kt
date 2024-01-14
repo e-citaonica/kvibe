@@ -34,7 +34,7 @@ class WebSocketHandler(
         socketIOServer.addConnectListener(onConnected())
         socketIOServer.addDisconnectListener(onDisconnected())
         socketIOServer.addEventListener(WsEventName.OPERATION, OperationWrapper::class.java, operationEvent())
-        socketIOServer.addEventListener(WsEventName.SELECTION, TextSelection::class.java, selectionEvent())
+//        socketIOServer.addEventListener(WsEventName.SELECTION, TextSelection::class.java, selectionEvent())
     }
 
     private fun operationEvent(): DataListener<OperationWrapper> {
