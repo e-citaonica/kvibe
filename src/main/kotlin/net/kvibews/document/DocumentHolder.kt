@@ -1,5 +1,6 @@
 package net.kvibews.document
 
+import com.corundumstudio.socketio.SocketIOClient
 import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock
 import net.kvibews.exception.InvalidOperationRevision
 import net.kvibews.model.DocumentState
@@ -12,7 +13,8 @@ class DocumentHolder private constructor(
     private val state: DocumentState,
     val lock: ReentrantReadWriteUpdateLock,
     private val formatter: DocumentFormatter,
-    private val transformations: OperationTransformations
+    private val transformations: OperationTransformations,
+    private val activeUsers: MutableMap<String, SocketIOClient>
 ) {
 
     companion object Factory {
@@ -21,9 +23,18 @@ class DocumentHolder private constructor(
                 state,
                 ReentrantReadWriteUpdateLock(),
                 DocumentFormatter(state.content),
-                transformations
+                transformations,
+                mutableMapOf()
             )
         }
+    }
+
+    fun hasActiveUsers(): Boolean {
+        return activeUsers.isNotEmpty()
+    }
+
+    fun getActiveUsers(): Map<String, SocketIOClient> {
+        return activeUsers
     }
 
     fun apply(operation: TextOperation) {
@@ -32,12 +43,12 @@ class DocumentHolder private constructor(
         formatter.apply(operation)
     }
 
-    fun addUser(user: String) {
-        state.activeUsers.add(user)
+    fun addUser(user: String, session: SocketIOClient) {
+        activeUsers[user] = session
     }
 
     fun removeUser(user: String) {
-        state.activeUsers.removeIf { it == user }
+        activeUsers.remove(user)
     }
 
     fun transformAgainstRevisionLogs(operation: OperationWrapper): List<TextOperation> {
@@ -81,7 +92,6 @@ class DocumentHolder private constructor(
         return DocumentState(
             revision = state.revision,
             content = formatter.getValue(),
-            activeUsers = state.activeUsers.toMutableList(),
             name = state.name,
             operations = state.operations.toMutableList(),
             id = state.id,

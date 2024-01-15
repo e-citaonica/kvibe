@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 
 @Service
-class DocumentOperationHandlerService(
+class OperationHandlerService(
     val documentRepo: DocumentRepository,
     val eventDispatcherService: EventDispatcherService,
     val logger: Logger,
@@ -25,13 +25,13 @@ class DocumentOperationHandlerService(
 ) {
     var documents = ConcurrentHashMap<String, DocumentHolder>()
 
-    fun joinDocument(documentId: String, user: String) {
+    fun joinDocument(documentId: String, user: String, session: SocketIOClient) {
         if (!documents.contains(documentId)) {
             documentRepo.getDocument(documentId)?.let {
                 val docHolder = DocumentHolder.getInstance(it, operationTransformations)
                 documents[documentId] = docHolder
                 docHolder.lock.writeLock().lock()
-                docHolder.addUser(user)
+                docHolder.addUser(user, session)
                 docHolder.lock.writeLock().unlock()
             }
         }
@@ -42,8 +42,7 @@ class DocumentOperationHandlerService(
 
         document.lock.writeLock().lock()
         document.removeUser(user)
-        val snapshot = document.getSnapshot()
-        if (snapshot.activeUsers.isEmpty()) {
+        if (!document.hasActiveUsers()) {
             documents.remove(documentId)
         }
         document.lock.writeLock().unlock()
@@ -62,6 +61,12 @@ class DocumentOperationHandlerService(
     fun getDocument(documentId: String): DocumentState {
         val document = documents[documentId]?.getSnapshot() ?: documentRepo.getDocument(documentId)
         return document ?: throw DocumentNotFoundException(documentId)
+    }
+
+    fun transformAndApply(operationWrapper: OperationWrapper) {
+        getSessionForUser(operationWrapper.docId, operationWrapper.performedBy)?.let {
+            transformAndApply(operationWrapper, it)
+        }
     }
 
     fun transformAndApply(
@@ -108,6 +113,15 @@ class DocumentOperationHandlerService(
 
     fun getDocumentIfLocal(documentId: String): DocumentState? {
         return documents[documentId]?.getSnapshot()
+    }
+
+    fun getSessionForUser(documentId: String, user: String): SocketIOClient? {
+        return documents[documentId]?.let { d ->
+            d.lock.readLock().lock()
+            val userSession = d.getActiveUsers()[user]
+            d.lock.readLock().unlock()
+            return userSession
+        }
     }
 
 }

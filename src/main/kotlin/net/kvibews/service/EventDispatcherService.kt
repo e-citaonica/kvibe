@@ -29,6 +29,10 @@ class EventDispatcherService(
         }
     }
 
+    fun requestOpFromOtherInstances(operation: OperationWrapper) {
+        redissonClient.getTopic(RedisTopicName.DOC_OPERATION_REQUESTED).publish(operation)
+    }
+
     fun dispatch(cursorPosition: TextSelection, socketIOClient: SocketIOClient) {
         socketIOServer.getRoomOperations(cursorPosition.docId).sendEvent(WsEventName.SELECTION, objectMapper.writeValueAsString(cursorPosition))
     }
