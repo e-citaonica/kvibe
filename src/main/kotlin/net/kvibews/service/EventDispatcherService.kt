@@ -16,20 +16,9 @@ class EventDispatcherService(
     val redissonClient: RedissonClient,
     val objectMapper: ObjectMapper
 ) {
-
-    fun dispatch(operation: OperationWrapper, socketIOClient: SocketIOClient) {
-        socketIOServer.getRoomOperations(operation.docId)
-            .sendEvent(WsEventName.OPERATION, socketIOClient, objectMapper.writeValueAsString(operation))
-        redissonClient.getTopic(RedisTopicName.DOC_OPERATION_PROCESSED).publish(operation)
-    }
-
-    fun dispatch(operations: List<OperationWrapper>, socketIOClient: SocketIOClient) {
-        operations.forEach {
-            dispatch(it, socketIOClient)
-        }
-    }
-
-    fun dispatch(cursorPosition: TextSelection, socketIOClient: SocketIOClient) {
-        socketIOServer.getRoomOperations(cursorPosition.docId).sendEvent(WsEventName.SELECTION, objectMapper.writeValueAsString(cursorPosition))
+    fun <T> dispatchToRoom(roomId: String, event: String, payload: T, socketIOClient: SocketIOClient) {
+        socketIOServer.getRoomOperations(roomId)
+            .sendEvent(event, socketIOClient, objectMapper.writeValueAsString(payload))
+        redissonClient.getTopic(RedisTopicName.DOC_OPERATION_PROCESSED).publish(payload)
     }
 }

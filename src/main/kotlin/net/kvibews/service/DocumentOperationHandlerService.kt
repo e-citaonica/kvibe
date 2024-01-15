@@ -4,6 +4,7 @@ import com.corundumstudio.socketio.SocketIOClient
 import net.kvibews.document.DocumentHolder
 import net.kvibews.dto.DocumentDTO
 import net.kvibews.exception.DocumentNotFoundException
+import net.kvibews.handler.WsEventName
 import net.kvibews.model.DocumentState
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextOperation
@@ -33,6 +34,7 @@ class DocumentOperationHandlerService(
                 docHolder.lock.writeLock().lock()
                 docHolder.addUser(user)
                 docHolder.lock.writeLock().unlock()
+
             }
         }
     }
@@ -87,8 +89,9 @@ class DocumentOperationHandlerService(
         documentRepo.setDocumentAsync(snapshot.id, snapshot)
 
         transformedOperations.forEach {
-            eventDispatcherService.dispatch(
-                OperationWrapper(
+            eventDispatcherService.dispatchToRoom(
+                snapshot.id,
+                WsEventName.OPERATION, OperationWrapper(
                     snapshot.id,
                     snapshot.revision,
                     operationWrapper.performedBy,

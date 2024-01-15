@@ -6,7 +6,6 @@ import com.corundumstudio.socketio.listener.ConnectListener
 import com.corundumstudio.socketio.listener.DataListener
 import com.corundumstudio.socketio.listener.DisconnectListener
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import net.kvibews.dto.OperationDTO
 import net.kvibews.enum.OperationType
 import net.kvibews.model.OperationWrapper
@@ -14,10 +13,11 @@ import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection
 import net.kvibews.service.DocumentOperationHandlerService
 import net.kvibews.service.EventDispatcherService
-import org.springframework.expression.spel.ast.Selection
 import org.springframework.stereotype.Component
 
 object WsEventName {
+    const val USER_JOINED_DOC = "user_joined_doc"
+    const val USER_LEFT_DOC = "user_left_doc"
     const val OPERATION = "operation"
     const val SELECTION = "selection"
 }
@@ -29,12 +29,12 @@ class WebSocketHandler(
     val eventDispatcherService: EventDispatcherService,
     val objectMapper: ObjectMapper
 ) {
-
     init {
         socketIOServer.addConnectListener(onConnected())
         socketIOServer.addDisconnectListener(onDisconnected())
         socketIOServer.addEventListener(WsEventName.OPERATION, OperationWrapper::class.java, operationEvent())
-//        socketIOServer.addEventListener(WsEventName.SELECTION, TextSelection::class.java, selectionEvent())
+        socketIOServer.addEventListener(WsEventName.SELECTION, TextSelection::class.java, selectionEvent())
+        socketIOServer.addEventListener(WsEventName.USER_JOINED_DOC, String::class.java, onUserJoinedDocEvent())
     }
 
     private fun operationEvent(): DataListener<OperationWrapper> {
@@ -54,8 +54,9 @@ class WebSocketHandler(
                 ), socketIOClient
             )
 
-            eventDispatcherService.dispatch(
-                TextSelection(
+            eventDispatcherService.dispatchToRoom(
+                selection.docId,
+                WsEventName.SELECTION, TextSelection(
                     selection.docId,
                     transformedOps[0].position,
                     transformedOps[0].position + transformedOps[0].length,
@@ -72,6 +73,13 @@ class WebSocketHandler(
             document?.let {
                 documentOperationHandlerService.joinDocument(it, client.sessionId.toString())
                 client.joinRoom(it)
+
+                eventDispatcherService.dispatchToRoom(
+                    it,
+                    client.sessionId.toString(),
+                    WsEventName.USER_JOINED_DOC,
+                    client
+                )
             }
         }
     }
@@ -81,9 +89,29 @@ class WebSocketHandler(
             val document = client.handshakeData.getSingleUrlParam("docId")
             document?.let {
                 documentOperationHandlerService.leaveDocument(document, client.sessionId.toString())
+
+                eventDispatcherService.dispatchToRoom(
+                    it,
+                    client.sessionId.toString(),
+                    WsEventName.USER_LEFT_DOC,
+                    client
+                )
             }
         }
     }
 
+    private fun onUserJoinedDocEvent(): DataListener<String> {
+        return DataListener { client, userName, _ ->
+            val document = client.handshakeData.getSingleUrlParam("docId")
+            document?.let {
+                eventDispatcherService.dispatchToRoom(
+                    it,
+                    client.sessionId.toString(),
+                    WsEventName.USER_JOINED_DOC,
+                    client
+                )
+            }
+        }
+    }
 }
 
