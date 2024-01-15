@@ -4,9 +4,6 @@ import com.corundumstudio.socketio.SocketIOClient
 import com.corundumstudio.socketio.SocketIOServer
 import com.fasterxml.jackson.databind.ObjectMapper
 import net.kvibews.handler.RedisTopicName
-import net.kvibews.handler.WsEventName
-import net.kvibews.model.OperationWrapper
-import net.kvibews.model.TextSelection
 import org.redisson.api.RedissonClient
 import org.springframework.stereotype.Service
 
