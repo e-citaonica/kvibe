@@ -34,7 +34,7 @@ class WebSocketHandler(
         socketIOServer.addDisconnectListener(onDisconnected())
         socketIOServer.addEventListener(WsEventName.OPERATION, OperationWrapper::class.java, operationEvent())
         socketIOServer.addEventListener(WsEventName.SELECTION, TextSelection::class.java, selectionEvent())
-        socketIOServer.addEventListener(WsEventName.USER_JOINED_DOC, String::class.java, onUserJoinedDocEvent())
+        socketIOServer.addEventListener(WsEventName.USER_JOINED_DOC, String::class.java, userJoinedDocEvent())
     }
 
     private fun operationEvent(): DataListener<OperationWrapper> {
@@ -69,15 +69,15 @@ class WebSocketHandler(
 
     private fun onConnected(): ConnectListener {
         return ConnectListener { client: SocketIOClient ->
-            val document = client.handshakeData.getSingleUrlParam("docId")
-            document?.let {
+            val docId = client.handshakeData.getSingleUrlParam("docId")
+            docId?.let {
                 documentOperationHandlerService.joinDocument(it, client.sessionId.toString())
                 client.joinRoom(it)
 
                 eventDispatcherService.dispatchToRoom(
                     it,
-                    client.sessionId.toString(),
                     WsEventName.USER_JOINED_DOC,
+                    client.sessionId.toString(),
                     client
                 )
             }
@@ -86,28 +86,29 @@ class WebSocketHandler(
 
     private fun onDisconnected(): DisconnectListener {
         return DisconnectListener { client: SocketIOClient ->
-            val document = client.handshakeData.getSingleUrlParam("docId")
-            document?.let {
-                documentOperationHandlerService.leaveDocument(document, client.sessionId.toString())
+            val docId = client.handshakeData.getSingleUrlParam("docId")
+            docId?.let {
+                documentOperationHandlerService.leaveDocument(docId, client.sessionId.toString())
 
                 eventDispatcherService.dispatchToRoom(
                     it,
-                    client.sessionId.toString(),
                     WsEventName.USER_LEFT_DOC,
+                    client.sessionId.toString(),
                     client
                 )
             }
         }
     }
 
-    private fun onUserJoinedDocEvent(): DataListener<String> {
+    private fun userJoinedDocEvent(): DataListener<String> {
         return DataListener { client, userName, _ ->
-            val document = client.handshakeData.getSingleUrlParam("docId")
-            document?.let {
+            val docId = client.handshakeData.getSingleUrlParam("docId")
+            println(docId)
+            docId?.let {
                 eventDispatcherService.dispatchToRoom(
                     it,
-                    client.sessionId.toString(),
                     WsEventName.USER_JOINED_DOC,
+                    userName,
                     client
                 )
             }
