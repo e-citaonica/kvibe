@@ -11,6 +11,7 @@ import net.kvibews.enum.OperationType
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection
+import net.kvibews.model.UserJoinedPayload
 import net.kvibews.service.DocumentOperationHandlerService
 import net.kvibews.service.EventDispatcherService
 import org.springframework.stereotype.Component
@@ -73,13 +74,6 @@ class WebSocketHandler(
             docId?.let {
                 documentOperationHandlerService.joinDocument(it, client.sessionId.toString())
                 client.joinRoom(it)
-
-                eventDispatcherService.dispatchToRoom(
-                    it,
-                    WsEventName.USER_JOINED_DOC,
-                    client.sessionId.toString(),
-                    client
-                )
             }
         }
     }
@@ -101,14 +95,17 @@ class WebSocketHandler(
     }
 
     private fun userJoinedDocEvent(): DataListener<String> {
-        return DataListener { client, userName, _ ->
+        return DataListener { client, username: String, _ ->
             val docId = client.handshakeData.getSingleUrlParam("docId")
-            println(docId)
+
+            val payload = UserJoinedPayload(client.sessionId.toString(), username)
+
+            println("${client.sessionId} $docId $payload")
             docId?.let {
                 eventDispatcherService.dispatchToRoom(
                     it,
                     WsEventName.USER_JOINED_DOC,
-                    userName,
+                    payload,
                     client
                 )
             }
