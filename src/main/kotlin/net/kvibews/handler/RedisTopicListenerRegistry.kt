@@ -1,7 +1,7 @@
 package net.kvibews.handler
 
 import net.kvibews.model.OperationWrapper
-import net.kvibews.service.DocumentOperationHandlerService
+import net.kvibews.service.OperationHandlerService
 import org.redisson.api.RedissonClient
 import org.redisson.api.listener.MessageListener
 import org.springframework.stereotype.Component
@@ -14,18 +14,11 @@ object RedisTopicName {
 }
 @Component
 class RedisTopicListenerRegistry(redissonClient: RedissonClient,
-                                 val documentHandler: DocumentOperationHandlerService
+                                 val documentHandler: OperationHandlerService
 ) {
 
     init {
-        redissonClient.getTopic(RedisTopicName.DOC_OPERATION_REQUESTED).addListener(OperationWrapper::class.java, operationRequested())
+//        redissonClient.getTopic(RedisTopicName.DOC_OPERATION_REQUESTED).addListener(OperationWrapper::class.java)
     }
 
-    fun operationRequested(): MessageListener<OperationWrapper> {
-        return MessageListener { _, operation ->
-            if (documentHandler.isDocumentLocal(operation.docId)) {
-//                documentHandler.transformAndApply(operation)
-            }
-        }
-    }
 }

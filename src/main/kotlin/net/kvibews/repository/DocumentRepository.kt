@@ -32,6 +32,10 @@ class DocumentRepository(
         return redisson.getDocumentJsonBucket(documentCodec, docId).get()
     }
 
+    fun compareAndSet(docId: String, prev: DocumentState, new: DocumentState): Boolean {
+        return redisson.getDocumentJsonBucket(documentCodec, docId).compareAndSet(prev, new)
+    }
+
 }
 fun RedissonClient.getDocumentJsonBucket(codec: JacksonCodec<DocumentState>, docId: String): RBucket<DocumentState> {
     return this.getJsonBucket("${DocumentRepository.DOCUMENT}:${docId}", codec)
