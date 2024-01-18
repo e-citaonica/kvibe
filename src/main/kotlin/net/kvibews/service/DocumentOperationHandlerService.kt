@@ -8,6 +8,7 @@ import net.kvibews.handler.WsEventName
 import net.kvibews.model.DocumentState
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextOperation
+import net.kvibews.model.TextSelection
 import net.kvibews.operation_transformations.OperationTransformations
 import net.kvibews.repository.DocumentRepository
 import org.slf4j.Logger
@@ -103,6 +104,17 @@ class DocumentOperationHandlerService(
         document.lock.updateLock().unlock()
 
         return Pair(snapshot.revision, transformedOperations)
+    }
+
+    fun transformSelection(
+        selection: TextSelection,
+        userSession: SocketIOClient
+    ): TextSelection {
+        val document = documents[selection.docId]!!
+
+        val transformedSelection = document.transformAgainstRevisionLogs(selection)
+
+        return transformedSelection;
     }
 
     fun isDocumentLocal(documentId: String): Boolean {

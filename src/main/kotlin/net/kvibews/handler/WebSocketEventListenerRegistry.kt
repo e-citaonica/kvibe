@@ -27,8 +27,7 @@ object WsEventName {
 class WebSocketHandler(
     socketIOServer: SocketIOServer,
     val documentOperationHandlerService: DocumentOperationHandlerService,
-    val eventDispatcherService: EventDispatcherService,
-    val objectMapper: ObjectMapper
+    val eventDispatcherService: EventDispatcherService
 ) {
     init {
         socketIOServer.addConnectListener(onConnected())
@@ -48,19 +47,17 @@ class WebSocketHandler(
     private fun selectionEvent(): DataListener<TextSelection> {
         return DataListener { socketIOClient, selection, _ ->
 
-            val (_, transformedOps) = documentOperationHandlerService.transformAndApply(
-                OperationWrapper(
-                    selection.docId, 0, selection.performedBy,
-                    TextOperation(OperationType.DELETE, "", selection.from, selection.to - selection.from + 1)
-                ), socketIOClient
+            val transformedSelection = documentOperationHandlerService.transformSelection(
+                selection, socketIOClient
             )
 
             eventDispatcherService.dispatchToRoom(
-                selection.docId,
+                transformedSelection.docId,
                 WsEventName.SELECTION, TextSelection(
-                    selection.docId,
-                    transformedOps[0].position,
-                    transformedOps[0].position + transformedOps[0].length,
+                    transformedSelection.docId,
+                    transformedSelection.revision,
+                    transformedSelection.from,
+                    transformedSelection.to,
                     selection.performedBy
                 ), socketIOClient
             )

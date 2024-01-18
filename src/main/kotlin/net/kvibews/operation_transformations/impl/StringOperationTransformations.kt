@@ -89,10 +89,23 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
         }
     }
 
+    override fun transform(op1: TextSelection, op2: TextOperation): TextSelection {
+        return if (op2.type == OperationType.INSERT)
+            (transformSI(op1, op2))
+        else
+            (transformSD(op1, op2))
+    }
+
     private fun transformSI(selection: TextSelection, op: TextOperation): TextSelection {
         // text inserted inside selection => extend selection by text length
         return if (op.position >= selection.from && op.position < selection.to) {
-            TextSelection(selection.docId, selection.from, selection.to + op.length, selection.performedBy)
+            TextSelection(
+                selection.docId,
+                selection.revision,
+                selection.from,
+                selection.to + op.length,
+                selection.performedBy
+            )
         }
         // selection left of insert or text inserted after selection
         // OR selection starts before insert and ends inside insert
@@ -104,13 +117,20 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
 
         // delete starts and ends before selection
         return if (opEnd <= selection.from) {
-            TextSelection(selection.docId, selection.from - op.length, selection.to - op.length, selection.performedBy)
+            TextSelection(
+                selection.docId,
+                selection.revision,
+                selection.from - op.length,
+                selection.to - op.length,
+                selection.performedBy
+            )
         }
         // delete starts before selection and ends in middle of selection
         else if (op.position < selection.from && opEnd > selection.from && opEnd < selection.to) {
             val overlapFromStartOfSelection = selection.from - op.position;
             TextSelection(
                 selection.docId,
+                selection.revision,
                 selection.from - (op.length - overlapFromStartOfSelection),
                 selection.to - overlapFromStartOfSelection,
                 selection.performedBy
@@ -120,7 +140,6 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
         else if (op.position >= selection.from) {
             val overlapFromStartOfSelection = op.position - selection.from
             selection
-        }
-        else selection
+        } else selection
     }
 }
