@@ -17,19 +17,25 @@ class EventDispatcherService(
     val objectMapper: ObjectMapper
 ) {
 
-    fun dispatch(operation: OperationWrapper, socketIOClient: SocketIOClient) {
+    fun dispatchToWSAndRedis(operation: OperationWrapper, socketIOClient: SocketIOClient) {
         socketIOServer.getRoomOperations(operation.docId)
             .sendEvent(WsEventName.OPERATION, socketIOClient, objectMapper.writeValueAsString(operation))
         redissonClient.getTopic(RedisTopicName.DOC_OPERATION_PROCESSED).publish(operation)
     }
 
-    fun dispatch(operations: List<OperationWrapper>, socketIOClient: SocketIOClient) {
+    fun dispatch(operation: OperationWrapper) {
+        socketIOServer.getRoomOperations(operation.docId)
+            .sendEvent(WsEventName.OPERATION, objectMapper.writeValueAsString(operation))
+    }
+
+    fun dispatchToWSAndRedis(operations: List<OperationWrapper>, socketIOClient: SocketIOClient) {
         operations.forEach {
-            dispatch(it, socketIOClient)
+            dispatchToWSAndRedis(it, socketIOClient)
         }
     }
 
-    fun dispatch(cursorPosition: TextSelection, socketIOClient: SocketIOClient) {
-        socketIOServer.getRoomOperations(cursorPosition.docId).sendEvent(WsEventName.SELECTION, objectMapper.writeValueAsString(cursorPosition))
+    fun dispatchToWSAndRedis(cursorPosition: TextSelection, socketIOClient: SocketIOClient) {
+        socketIOServer.getRoomOperations(cursorPosition.docId)
+            .sendEvent(WsEventName.SELECTION, objectMapper.writeValueAsString(cursorPosition))
     }
 }

@@ -62,7 +62,7 @@ class OperationHandlerService(
         return documentRepo.getDocument(documentId) ?: throw DocumentNotFoundException(documentId)
     }
 
-    fun submit(operationWrapper: OperationWrapper, userSession: SocketIOClient): Pair<Int, List<TextOperation>>? {
+    fun tryApply(operationWrapper: OperationWrapper, userSession: SocketIOClient): Pair<Int, List<TextOperation>>? {
         var retry = 0
         var request: SubmitRequest
         var success: Boolean
@@ -77,13 +77,13 @@ class OperationHandlerService(
                 opTransformations = operationTransformations
             )
 
-            success = submit(request)
+            success = tryApply(request)
         } while (retry < props.operation.maxNumberOfRetries && !success)
 
         if (success) {
             val ops = request.operations.subList(request.snapshot.revision, request.operations.size)
             ops.forEach {
-                eventDispatcherService.dispatch(
+                eventDispatcherService.dispatchToWSAndRedis(
                     OperationWrapper(
                         operation = it,
                         docId = request.snapshot.id,
@@ -97,7 +97,7 @@ class OperationHandlerService(
         return null
     }
 
-    fun submit(
+    fun tryApply(
         request: SubmitRequest
     ): Boolean {
         val ops = request.transform()
@@ -106,6 +106,6 @@ class OperationHandlerService(
             request.apply(it)
         }
 
-        return documentRepo.compareAndSet(request.snapshot.id, request.snapshot, request.getTransformed())
+        return documentRepo.compareAndSet(request.snapshot.id, request.snapshot.revision, request.getTransformed())
     }
 }

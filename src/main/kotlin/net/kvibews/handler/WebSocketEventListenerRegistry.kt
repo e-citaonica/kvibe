@@ -37,7 +37,7 @@ class WebSocketHandler(
 
     private fun operationEvent(): DataListener<OperationWrapper> {
         return DataListener { socketIOClient, operationWrapper, ack ->
-            operationHandlerService.submit(operationWrapper, socketIOClient)?.let {
+            operationHandlerService.tryApply(operationWrapper, socketIOClient)?.let {
                 ack.sendAckData(OperationDTO.AckMessage(it.first))
             }
         }
@@ -46,13 +46,13 @@ class WebSocketHandler(
     private fun selectionEvent(): DataListener<TextSelection> {
         return DataListener { socketIOClient, selection, _ ->
 
-            operationHandlerService.submit(
+            operationHandlerService.tryApply(
                 OperationWrapper(
                     selection.docId, 0, selection.performedBy,
                     TextOperation(OperationType.DELETE, "", selection.from, selection.to - selection.from + 1)
                 ), socketIOClient
             )?.let {
-                eventDispatcherService.dispatch(
+                eventDispatcherService.dispatchToWSAndRedis(
                     TextSelection(
                         selection.docId,
                         it.second[0].position,
