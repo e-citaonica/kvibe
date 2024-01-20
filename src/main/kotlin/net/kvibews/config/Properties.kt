@@ -24,6 +24,15 @@ class RedisProperties(
     var connectionMinimumIdleSize: Int = 5
 )
 
+@ConfigurationProperties(prefix = "application")
+class ApplicationProperties(
+    var operation: Operation
+) {
+    class Operation(
+        var maxNumberOfRetries: Int = 4
+    )
+}
+
 @Configuration
-@EnableConfigurationProperties(value = [SocketIOProperties::class, RedisProperties::class])
-class PropertiesConfiguration { }
+@EnableConfigurationProperties(value = [SocketIOProperties::class, RedisProperties::class, ApplicationProperties::class])
+class PropertiesConfiguration {}

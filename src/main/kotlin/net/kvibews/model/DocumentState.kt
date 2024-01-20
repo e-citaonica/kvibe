@@ -6,6 +6,6 @@ class DocumentState (
     val language: String,
     var revision: Int = 0,
     var content: String = "",
-    val operations: MutableList<TextOperation> = mutableListOf(),
-    val activeUsers: MutableList<String> = mutableListOf()
+    val operations: List<TextOperation> = mutableListOf(),
+    val activeUsers: List<String> = mutableListOf()
 )

@@ -5,14 +5,13 @@ import com.corundumstudio.socketio.SocketIOServer
 import com.corundumstudio.socketio.listener.ConnectListener
 import com.corundumstudio.socketio.listener.DataListener
 import com.corundumstudio.socketio.listener.DisconnectListener
-import com.fasterxml.jackson.databind.ObjectMapper
 import net.kvibews.dto.OperationDTO
 import net.kvibews.enum.OperationType
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection
 import net.kvibews.model.UserJoinedPayload
-import net.kvibews.service.DocumentOperationHandlerService
+import net.kvibews.service.OperationHandlerService
 import net.kvibews.service.EventDispatcherService
 import org.springframework.stereotype.Component
 
@@ -26,7 +25,7 @@ object WsEventName {
 @Component
 class WebSocketHandler(
     socketIOServer: SocketIOServer,
-    val documentOperationHandlerService: DocumentOperationHandlerService,
+    val operationHandlerService: OperationHandlerService,
     val eventDispatcherService: EventDispatcherService
 ) {
     init {
@@ -39,28 +38,26 @@ class WebSocketHandler(
 
     private fun operationEvent(): DataListener<OperationWrapper> {
         return DataListener { socketIOClient, operationWrapper, ack ->
-            val (revision, _) = documentOperationHandlerService.transformAndApply(operationWrapper, socketIOClient)
-            ack.sendAckData(OperationDTO.AckMessage(revision))
+            operationHandlerService.tryApply(operationWrapper, socketIOClient)?.let {
+                ack.sendAckData(OperationDTO.AckMessage(it.first))
+            }
         }
     }
 
     private fun selectionEvent(): DataListener<TextSelection> {
         return DataListener { socketIOClient, selection, _ ->
-
-            val transformedSelection = documentOperationHandlerService.transformSelection(
-                selection, socketIOClient
-            )
-
-            eventDispatcherService.dispatchToRoom(
-                transformedSelection.docId,
-                WsEventName.SELECTION, TextSelection(
-                    transformedSelection.docId,
-                    transformedSelection.revision,
-                    transformedSelection.from,
-                    transformedSelection.to,
-                    selection.performedBy
-                ), socketIOClient
-            )
+            val transformedSelection = operationHandlerService.transform(selection)
+            transformedSelection?.let {
+                eventDispatcherService.dispatchToWSAndRedis(
+                    TextSelection(
+                        transformedSelection.docId,
+                        transformedSelection.revision,
+                        transformedSelection.from,
+                        transformedSelection.to,
+                        transformedSelection.performedBy
+                    ), socketIOClient
+                )
+            }
         }
     }
 
@@ -69,7 +66,7 @@ class WebSocketHandler(
         return ConnectListener { client: SocketIOClient ->
             val docId = client.handshakeData.getSingleUrlParam("docId")
             docId?.let {
-                documentOperationHandlerService.joinDocument(it, client.sessionId.toString())
+//                operationHandlerService.joinDocument(it, client.sessionId.toString())
                 client.joinRoom(it)
             }
         }
@@ -79,7 +76,7 @@ class WebSocketHandler(
         return DisconnectListener { client: SocketIOClient ->
             val docId = client.handshakeData.getSingleUrlParam("docId")
             docId?.let {
-                documentOperationHandlerService.leaveDocument(docId, client.sessionId.toString())
+//                operationHandlerService.leaveDocument(docId, client.sessionId.toString())
 
                 eventDispatcherService.dispatchToRoom(
                     it,

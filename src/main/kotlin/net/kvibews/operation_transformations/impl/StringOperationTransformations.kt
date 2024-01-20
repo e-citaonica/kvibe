@@ -91,9 +91,9 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
 
     override fun transform(op1: TextSelection, op2: TextOperation): TextSelection {
         return if (op2.type == OperationType.INSERT)
-            (transformSI(op1, op2))
+            transformSI(op1, op2)
         else
-            (transformSD(op1, op2))
+            transformSD(op1, op2)
     }
 
     private fun transformSI(selection: TextSelection, op: TextOperation): TextSelection {
@@ -113,7 +113,7 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
     }
 
     private fun transformSD(selection: TextSelection, op: TextOperation): TextSelection {
-        val opEnd = op.position + op.length - 1
+        val opEnd = op.position + op.length
 
         // delete starts and ends before selection
         return if (opEnd <= selection.from) {
@@ -137,9 +137,16 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
             )
         }
         // delete is inside of selection
-        else if (op.position >= selection.from) {
-            val overlapFromStartOfSelection = op.position - selection.from
-            selection
+        else if (op.position >= selection.from && op.position < selection.to) {
+            val toCut = op.length.coerceAtMost(selection.to - op.position)
+
+            TextSelection(
+                selection.docId,
+                selection.revision,
+                selection.from,
+                selection.to - toCut,
+                selection.performedBy
+            )
         } else selection
     }
 }

@@ -3,11 +3,10 @@ package net.kvibews.enum
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-enum class OperationType(val value: String) {
+enum class OperationType(@JsonValue val value: String) {
     INSERT("insert"),
     DELETE("delete");
 
-    @JsonValue fun getSerialized() = value
     companion object {
         @JvmStatic
         @JsonCreator
