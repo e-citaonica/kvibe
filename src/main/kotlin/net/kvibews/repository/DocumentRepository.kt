@@ -32,7 +32,7 @@ class DocumentRepository(
     }
 
     fun addActiveUser(docId: String, sessionId: UUID, username: String): Boolean {
-        return redisson.getMap<UUID, String>("$DOCUMENT_USERS:$docId").fastPut(sessionId, username)
+        return redisson.getMap<String, String>("$DOCUMENT_USERS:$docId").fastPut(sessionId.toString(), username)
     }
 
     fun removeActiveUser(docId: String, sessionId: UUID): Boolean {
