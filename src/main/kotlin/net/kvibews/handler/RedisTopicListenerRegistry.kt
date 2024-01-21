@@ -1,5 +1,6 @@
 package net.kvibews.handler
 
+import net.kvibews.dto.DocumentDTO
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextSelection
 import net.kvibews.service.EventDispatcherService
@@ -16,13 +17,19 @@ object RedisTopicName {
 
 @Component
 class RedisTopicListenerRegistry(
-    redissonClient: RedissonClient,
-    val eventDispatcherService: EventDispatcherService
+        redissonClient: RedissonClient,
+        val eventDispatcherService: EventDispatcherService
 ) {
 
     init {
         redissonClient.getTopic(RedisTopicName.DOC_OPERATION_PROCESSED)
-            .addListener(OperationWrapper::class.java, onOperation())
+                .addListener(OperationWrapper::class.java, onOperation())
+        redissonClient.getTopic(RedisTopicName.DOC_SELECTION)
+                .addListener(TextSelection::class.java, onSelection())
+        redissonClient.getTopic(RedisTopicName.DOC_USER_JOINED)
+                .addListener(DocumentDTO.UserInfo::class.java, onUserJoined())
+        redissonClient.getTopic(RedisTopicName.DOC_USER_LEFT)
+                .addListener(DocumentDTO.UserInfo::class.java, onUserLeft())
     }
 
     private fun onOperation(): MessageListener<OperationWrapper> {
@@ -33,7 +40,19 @@ class RedisTopicListenerRegistry(
 
     private fun onSelection(): MessageListener<TextSelection> {
         return MessageListener { _, selection ->
-            eventDispatcherService.dispatchToWSRoom(selection)
+            eventDispatcherService.dispatchToWsRoom(selection.docId, WsEventName.SELECTION, selection)
+        }
+    }
+
+    private fun onUserJoined(): MessageListener<DocumentDTO.UserInfo> {
+        return MessageListener { _, userInfo ->
+            eventDispatcherService.dispatchToWsRoom(userInfo.docId, WsEventName.USER_JOINED_DOC, userInfo)
+        }
+    }
+
+    private fun onUserLeft(): MessageListener<DocumentDTO.UserInfo> {
+        return MessageListener { _, userInfo ->
+            eventDispatcherService.dispatchToWsRoom(userInfo.docId, WsEventName.USER_LEFT_DOC, userInfo)
         }
     }
 

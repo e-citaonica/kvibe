@@ -23,15 +23,16 @@ class EventDispatcherService(
         dispatch(operation.docId, WsEventName.OPERATION, RedisTopicName.DOC_OPERATION_PROCESSED, operation, exclude)
     }
 
+    fun dispatch(textSelection: TextSelection, exclude: SocketIOClient) {
+        dispatch(textSelection.docId, WsEventName.SELECTION, RedisTopicName.DOC_SELECTION, textSelection, exclude)
+    }
+
+    fun <T> dispatchToWsRoom(roomId: String, event: String, payload: T) {
+        socketIOServer.getRoomOperations(roomId).sendEvent(event, payload)
+    }
+
     fun dispatchToWSRoom(operation: OperationWrapper) {
         socketIOServer.getRoomOperations(operation.docId).sendEvent(WsEventName.OPERATION, operation)
     }
 
-    fun dispatch(textSelection: TextSelection, socketIOClient: SocketIOClient) {
-        dispatch(textSelection.docId, WsEventName.SELECTION, RedisTopicName.DOC_SELECTION, textSelection, socketIOClient)
-    }
-
-    fun dispatchToWSRoom(textSelection: TextSelection) {
-        socketIOServer.getRoomOperations(textSelection.docId).sendEvent(WsEventName.SELECTION, textSelection)
-    }
 }
