@@ -19,7 +19,7 @@ import java.util.*
 
 
 @Service
-class OperationHandlerService(
+class DocumentService(
     val documentRepo: DocumentRepository,
     val eventDispatcherService: EventDispatcherService,
     val props: ApplicationProperties,
@@ -27,29 +27,17 @@ class OperationHandlerService(
     @Qualifier("string") val opTransformations: OperationTransformations
 ) {
 
-//    fun joinDocument(documentId: String, user: String) {
-//        if (!documents.contains(documentId)) {
-//            documentRepo.getDocument(documentId)?.let {
-//                val docHolder = SubmitRequest.getInstance(it, operationTransformations)
-//                documents[documentId] = docHolder
-//                docHolder.lock.writeLock().lock()
-//                docHolder.addUser(user)
-//                docHolder.lock.writeLock().unlock()
-//            }
-//        }
-//    }
+    fun joinDocument(documentId: String, sessionId: UUID, username: String) {
+        documentRepo.addActiveUser(documentId, sessionId, username)
+    }
 
-//    fun leaveDocument(documentId: String, user: String) {
-//        val document = documents[documentId]!!
-//
-//        document.lock.writeLock().lock()
-//        document.removeUser(user)
-//        val snapshot = document.getSnapshot()
-//        if (snapshot.activeUsers.isEmpty()) {
-//            documents.remove(documentId)
-//        }
-//        document.lock.writeLock().unlock()
-//    }
+    fun getActiveUsername(documentId: String, sessionId: UUID): String? {
+        return documentRepo.getActiveUser(documentId, sessionId)
+    }
+
+    fun leaveDocument(documentId: String, sessionId: UUID) {
+        documentRepo.removeActiveUser(documentId, sessionId)
+    }
 
     fun createDocument(createDocument: DocumentDTO.Create): DocumentState {
         val documentId = UUID.randomUUID().toString()
@@ -64,7 +52,7 @@ class OperationHandlerService(
         return documentRepo.getDocument(documentId) ?: throw DocumentNotFoundException(documentId)
     }
 
-    fun tryApply(operationWrapper: OperationWrapper, userSession: SocketIOClient): Pair<Int, List<TextOperation>>? {
+    fun submit(operationWrapper: OperationWrapper, userSession: SocketIOClient): Pair<Int, List<TextOperation>>? {
         var retry = 0
         var request: SubmitRequest
         var success: Boolean

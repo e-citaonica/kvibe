@@ -8,6 +8,7 @@ import org.redisson.client.codec.LongCodec
 import org.redisson.client.codec.StringCodec
 import org.redisson.codec.JacksonCodec
 import org.springframework.stereotype.Repository
+import java.util.UUID
 
 
 @Repository
@@ -19,6 +20,7 @@ class DocumentRepository(
 
     companion object {
         const val DOCUMENT = "document"
+        const val DOCUMENT_USERS = "document:users"
     }
 
     fun setDocument(docId: String, value: DocumentState) {
@@ -27,6 +29,22 @@ class DocumentRepository(
 
     fun getDocument(docId: String): DocumentState? {
         return redisson.getDocumentJsonBucket(documentCodec, docId).get()
+    }
+
+    fun addActiveUser(docId: String, sessionId: UUID, username: String): Boolean {
+        return redisson.getMap<UUID, String>("$DOCUMENT_USERS:$docId").fastPut(sessionId, username)
+    }
+
+    fun removeActiveUser(docId: String, sessionId: UUID): Boolean {
+        return redisson.getMap<String, String>("$DOCUMENT_USERS:$docId").remove(sessionId.toString()) != null
+    }
+
+    fun getActiveUsers(docId: String, username: String): List<String> {
+        return redisson.getMap<String, String>("$DOCUMENT_USERS:$docId").values.toList()
+    }
+
+    fun getActiveUser(docId: String, sessionId: UUID): String? {
+        return redisson.getMap<String, String>("$DOCUMENT_USERS:$docId")[sessionId.toString()]
     }
 
     fun compareAndSet(docId: String, expectedRevision: Int, snapshot: DocumentState): Boolean {

@@ -1,5 +1,8 @@
 package net.kvibews.dto
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import java.util.UUID
+
 
 object DocumentDTO {
 
@@ -7,5 +10,11 @@ object DocumentDTO {
         val name: String,
         val language: String,
         val username: String
+    )
+
+    data class UserInfo(
+        @JsonProperty("docId") val docId: String,
+        @JsonProperty("sessionId") val sessionId: UUID,
+        @JsonProperty("username") val username: String
     )
 }

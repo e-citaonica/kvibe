@@ -63,7 +63,6 @@ class SubmitRequest(
     fun getTransformed() = DocumentState(
         revision = revision,
         operations = operations,
-        activeUsers = snapshot.activeUsers,
         id = snapshot.id,
         language = snapshot.language,
         name = snapshot.name,
