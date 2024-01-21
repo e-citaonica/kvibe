@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/doc")
+@RequestMapping("/document")
 class DocumentController(val operationHandlerService: OperationHandlerService) {
 
     @PostMapping
@@ -16,7 +16,7 @@ class DocumentController(val operationHandlerService: OperationHandlerService) {
     }
 
     @GetMapping("/{id}")
-    fun getDoc(@PathVariable id: String): DocumentState {
-        return operationHandlerService.getDocument(id)
+    fun getDoc(@PathVariable id: String): ResponseEntity<DocumentState> {
+        return ResponseEntity.ok(operationHandlerService.getDocument(id))
     }
 }

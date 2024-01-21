@@ -85,7 +85,7 @@ class OperationHandlerService(
         if (success) {
             val ops = request.operations.subList(request.snapshot.revision, request.operations.size)
             ops.forEach {
-                eventDispatcherService.dispatchToWSAndRedis(
+                eventDispatcherService.dispatch(
                     OperationWrapper(
                         operation = it,
                         docId = request.snapshot.id,
@@ -112,7 +112,7 @@ class OperationHandlerService(
     }
 
     fun transform(selection: TextSelection): TextSelection? {
-        val snapshot = documentRepo.getDocument(selection.docId)!!
+        val snapshot = documentRepo.getDocument(selection.docId) ?: return null
 
         if (selection.revision > snapshot.revision) {
             throw InvalidOperationRevision(
@@ -120,10 +120,10 @@ class OperationHandlerService(
             )
         }
 
-        var transformedSelection: TextSelection? = selection
+        var transformedSelection = selection
 
         for (revision in selection.revision until snapshot.operations.size) {
-            transformedSelection = opTransformations.transform(transformedSelection!!, snapshot.operations[revision])
+            transformedSelection = opTransformations.transform(transformedSelection, snapshot.operations[revision])
         }
 
         return transformedSelection

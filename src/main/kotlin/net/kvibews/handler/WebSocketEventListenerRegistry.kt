@@ -6,9 +6,7 @@ import com.corundumstudio.socketio.listener.ConnectListener
 import com.corundumstudio.socketio.listener.DataListener
 import com.corundumstudio.socketio.listener.DisconnectListener
 import net.kvibews.dto.OperationDTO
-import net.kvibews.enum.OperationType
 import net.kvibews.model.OperationWrapper
-import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection
 import net.kvibews.model.UserJoinedPayload
 import net.kvibews.service.OperationHandlerService
@@ -48,7 +46,7 @@ class WebSocketHandler(
         return DataListener { socketIOClient, selection, _ ->
             val transformedSelection = operationHandlerService.transform(selection)
             transformedSelection?.let {
-                eventDispatcherService.dispatchToWSAndRedis(
+                eventDispatcherService.dispatch(
                     TextSelection(
                         transformedSelection.docId,
                         transformedSelection.revision,
@@ -77,10 +75,10 @@ class WebSocketHandler(
             val docId = client.handshakeData.getSingleUrlParam("docId")
             docId?.let {
 //                operationHandlerService.leaveDocument(docId, client.sessionId.toString())
-
-                eventDispatcherService.dispatchToRoom(
+                eventDispatcherService.dispatch(
                     it,
                     WsEventName.USER_LEFT_DOC,
+                    RedisTopicName.DOC_USER_LEFT,
                     client.sessionId.toString(),
                     client
                 )
@@ -96,9 +94,10 @@ class WebSocketHandler(
 
             println("${client.sessionId} $docId $payload")
             docId?.let {
-                eventDispatcherService.dispatchToRoom(
+                eventDispatcherService.dispatch(
                     it,
                     WsEventName.USER_JOINED_DOC,
+                    RedisTopicName.DOC_USER_LEFT,
                     payload,
                     client
                 )
