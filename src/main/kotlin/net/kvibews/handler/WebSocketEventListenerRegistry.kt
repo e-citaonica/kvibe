@@ -79,7 +79,7 @@ class WebSocketHandler(
                         it,
                         WsEventName.USER_JOINED_DOC,
                         RedisTopicName.DOC_USER_JOINED,
-                        DocumentDTO.UserInfo(docId, client.sessionId, username),
+                        DocumentDTO.UserInfo(docId, client.sessionId.toString(), username),
                         client
                 )
             }
@@ -98,7 +98,7 @@ class WebSocketHandler(
                         RedisTopicName.DOC_USER_LEFT,
                         DocumentDTO.UserInfo(
                                 docId,
-                                client.sessionId,
+                                client.sessionId.toString(),
                                 documentService.getActiveUsername(docId, client.sessionId) ?: ""),
                         client
                 )
