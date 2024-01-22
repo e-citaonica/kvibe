@@ -65,10 +65,6 @@ class RedisTopicListenerRegistry(
         }
     }
 
-    private inline fun <reified T, reified M : RedisMessage<T>> RedissonClient.addListener(topicName: String, listener: MessageListener<M>) {
-        this.getTopic(topicName, TypedJsonJacksonCodec(object : TypeReference<M>() {}, mapper)).addListener(M::class.java, listener)
-    }
-
     private inline fun <reified T, reified M : RedisMessage<T>> RedissonClient.addListener(topicName: String, excludeOrigin: String, listener: MessageListener<T>) {
         this.getTopic(topicName, TypedJsonJacksonCodec(object : TypeReference<M>() {}, mapper)).addListener(M::class.java) { _, message ->
             val (origin, payload) = message
@@ -77,5 +73,9 @@ class RedisTopicListenerRegistry(
             }
         }
     }
+
+//    private inline fun <reified T, reified M : RedisMessage<T>> RedissonClient.addListener(topicName: String, listener: MessageListener<M>) {
+//        this.getTopic(topicName, TypedJsonJacksonCodec(object : TypeReference<M>() {}, mapper)).addListener(M::class.java, listener)
+//    }
 
 }

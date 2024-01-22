@@ -6,16 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import net.kvibews.handler.RedisMessage
 import net.kvibews.handler.RedisTopicName
 import net.kvibews.handler.WsEventName
-import net.kvibews.model.DocumentState
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextSelection
 import net.kvibews.provider.RedisOriginProvider
-import org.redisson.api.RTopic
 import org.redisson.api.RedissonClient
-import org.redisson.api.listener.MessageListener
-import org.redisson.codec.JacksonCodec
 import org.redisson.codec.JsonJacksonCodec
-import org.redisson.codec.TypedJsonJacksonCodec
 import org.springframework.stereotype.Service
 
 @Service
