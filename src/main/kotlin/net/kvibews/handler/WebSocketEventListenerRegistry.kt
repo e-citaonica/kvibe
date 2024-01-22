@@ -23,10 +23,10 @@ object WsEventName {
 
 @Component
 class WebSocketHandler(
-        socketIOServer: SocketIOServer,
-        val documentService: DocumentService,
-        val eventDispatcherService: EventDispatcherService,
-        val logger: Logger
+    socketIOServer: SocketIOServer,
+    val documentService: DocumentService,
+    val eventDispatcherService: EventDispatcherService,
+    val logger: Logger
 ) {
     companion object {
         const val Q_USERNAME = "username"
@@ -53,13 +53,7 @@ class WebSocketHandler(
             val transformedSelection = documentService.transform(selection)
             transformedSelection?.let {
                 eventDispatcherService.dispatch(
-                        TextSelection(
-                                transformedSelection.docId,
-                                transformedSelection.revision,
-                                transformedSelection.from,
-                                transformedSelection.to,
-                                transformedSelection.performedBy
-                        ), socketIOClient
+                    it, socketIOClient
                 )
             }
         }
@@ -76,11 +70,11 @@ class WebSocketHandler(
                 client.joinRoom(it)
                 documentService.joinDocument(it, client.sessionId, username)
                 eventDispatcherService.dispatch(
-                        it,
-                        WsEventName.USER_JOINED_DOC,
-                        RedisTopicName.DOC_USER_JOINED,
-                        DocumentDTO.UserInfo(docId, client.sessionId.toString(), username),
-                        client
+                    it,
+                    WsEventName.USER_JOINED_DOC,
+                    RedisTopicName.DOC_USER_JOINED,
+                    DocumentDTO.UserInfo(docId, client.sessionId.toString(), username),
+                    client
                 )
             }
         }
@@ -93,14 +87,15 @@ class WebSocketHandler(
 
             docId?.let {
                 eventDispatcherService.dispatch(
-                        it,
-                        WsEventName.USER_LEFT_DOC,
-                        RedisTopicName.DOC_USER_LEFT,
-                        DocumentDTO.UserInfo(
-                                docId,
-                                client.sessionId.toString(),
-                                documentService.getActiveUsername(docId, client.sessionId) ?: ""),
-                        client
+                    it,
+                    WsEventName.USER_LEFT_DOC,
+                    RedisTopicName.DOC_USER_LEFT,
+                    DocumentDTO.UserInfo(
+                        docId,
+                        client.sessionId.toString(),
+                        documentService.getActiveUsername(docId, client.sessionId) ?: ""
+                    ),
+                    client
                 )
                 documentService.leaveDocument(docId, client.sessionId)
             }
