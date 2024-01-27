@@ -1,11 +1,11 @@
-package net.kvibews.document
+package net.kvibews.core.document
 
-import net.kvibews.exception.InvalidOperationRevision
+import net.kvibews.core.operation_transformations.OperationTransformations
+import net.kvibews.exception.InvalidOperationRevisionException
 import net.kvibews.model.DocumentState
 import net.kvibews.model.OperationWrapper
 import net.kvibews.model.TextOperation
-import net.kvibews.model.TextSelection
-import net.kvibews.operation_transformations.OperationTransformations
+import java.time.ZonedDateTime
 import java.util.*
 
 class SubmitRequest(
@@ -21,13 +21,13 @@ class SubmitRequest(
 
     fun apply(operation: TextOperation) {
         operations.add(operation)
-        revision += 1
         formatter.apply(operation)
+        revision += 1
     }
 
     fun transform(): List<TextOperation> {
         if (operation.revision > snapshot.revision) {
-            throw InvalidOperationRevision(
+            throw InvalidOperationRevisionException(
                 "Attempted to perform operation with greater revision (${operation.revision}) than current document revision ${snapshot.revision}"
             )
         }
@@ -66,6 +66,8 @@ class SubmitRequest(
         id = snapshot.id,
         language = snapshot.language,
         name = snapshot.name,
+        createdAt = snapshot.createdAt,
+        updatedAt = ZonedDateTime.now(),
         content = formatter.getValue()
     )
 }

@@ -21,18 +21,20 @@ class RedisProperties(
     var timeout: Int,
     var clientName: String?,
     var connectionPoolSize: Int = 25,
-    var connectionMinimumIdleSize: Int = 5
+    var connectionMinimumIdleSize: Int = 5,
+    var dnsMonitoringInterval: Long = 5000
 )
 
 @ConfigurationProperties(prefix = "application")
 class ApplicationProperties(
-    var operation: Operation
+    var operation: Operation,
 ) {
     class Operation(
-        var maxNumberOfRetries: Int = 4
+        var maxNumberOfRetries: Int = 4,
+        var staleDocumentExpiry: Int = 7200
     )
 }
 
 @Configuration
 @EnableConfigurationProperties(value = [SocketIOProperties::class, RedisProperties::class, ApplicationProperties::class])
-class PropertiesConfiguration {}
+class PropertiesConfiguration

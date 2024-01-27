@@ -1,4 +1,4 @@
-package net.kvibews.enum
+package net.kvibews.model.enum
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue

@@ -1,4 +1,4 @@
-package net.kvibews.operation_transformations
+package net.kvibews.core.operation_transformations
 
 import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection

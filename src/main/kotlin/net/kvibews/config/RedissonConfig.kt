@@ -19,6 +19,7 @@ class RedissonConfig(val props: RedisProperties) {
             clientName = props.clientName
             connectionPoolSize = props.connectionPoolSize
             connectionMinimumIdleSize = props.connectionMinimumIdleSize
+            dnsMonitoringInterval = props.dnsMonitoringInterval
         }
         return Redisson.create(config)
     }

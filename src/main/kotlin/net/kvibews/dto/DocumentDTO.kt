@@ -1,6 +1,8 @@
 package net.kvibews.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import net.kvibews.model.DocumentOverview
+import java.time.ZonedDateTime
 
 
 object DocumentDTO {

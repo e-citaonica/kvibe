@@ -1,9 +1,9 @@
-package net.kvibews.operation_transformations.impl
+package net.kvibews.core.operation_transformations.impl
 
-import net.kvibews.enum.OperationType
+import net.kvibews.model.enum.OperationType
 import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection
-import net.kvibews.operation_transformations.OperationTransformations
+import net.kvibews.core.operation_transformations.OperationTransformations
 import org.slf4j.Logger
 import org.springframework.stereotype.Component
 

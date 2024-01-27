@@ -1,7 +1,7 @@
 package net.kvibews.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import net.kvibews.enum.OperationType
+import net.kvibews.model.enum.OperationType
 
 data class TextOperation(
     @JsonProperty("type") val type: OperationType,

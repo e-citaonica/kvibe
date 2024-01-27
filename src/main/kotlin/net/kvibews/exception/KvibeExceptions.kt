@@ -6,6 +6,6 @@ class DocumentNotFoundException(
     documentId: String
 ) : RuntimeException("Document with $documentId not found")
 
-class InvalidOperationRevision(
+class InvalidOperationRevisionException(
     message: String
 ) : RuntimeException(message)

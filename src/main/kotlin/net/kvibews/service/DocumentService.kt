@@ -2,19 +2,18 @@ package net.kvibews.service
 
 import com.corundumstudio.socketio.SocketIOClient
 import net.kvibews.config.ApplicationProperties
-import net.kvibews.document.SubmitRequest
+import net.kvibews.core.document.InvalidOperationException
+import net.kvibews.core.document.SubmitRequest
 import net.kvibews.dto.DocumentDTO
 import net.kvibews.exception.DocumentNotFoundException
-import net.kvibews.exception.InvalidOperationRevision
-import net.kvibews.model.DocumentState
-import net.kvibews.model.OperationWrapper
-import net.kvibews.model.TextOperation
-import net.kvibews.model.TextSelection
-import net.kvibews.operation_transformations.OperationTransformations
+import net.kvibews.exception.InvalidOperationRevisionException
+import net.kvibews.model.*
+import net.kvibews.core.operation_transformations.OperationTransformations
 import net.kvibews.repository.DocumentRepository
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
+import java.time.ZonedDateTime
 import java.util.*
 
 
@@ -31,25 +30,35 @@ class DocumentService(
         documentRepo.addActiveUser(documentId, sessionId, username)
     }
 
-    fun getActiveUsername(documentId: String, sessionId: UUID): String? {
-        return documentRepo.getActiveUser(documentId, sessionId)
-    }
-
     fun leaveDocument(documentId: String, sessionId: UUID) {
         documentRepo.removeActiveUser(documentId, sessionId)
     }
 
+    fun getActiveUsername(documentId: String, sessionId: UUID): String? {
+        return documentRepo.getActiveUser(documentId, sessionId)
+    }
+
+    fun getAllDocuments(): List<DocumentState> {
+        return documentRepo.getDocuments()
+    }
+
     fun createDocument(createDocument: DocumentDTO.Create): DocumentState {
         val documentId = UUID.randomUUID().toString()
-
         val document = DocumentState(documentId, createDocument.name, createDocument.language)
         documentRepo.setDocument(documentId, document)
-
         return document
     }
 
     fun getDocument(documentId: String): DocumentState {
         return documentRepo.getDocument(documentId) ?: throw DocumentNotFoundException(documentId)
+    }
+
+    fun getDocumentOverviews(): List<DocumentOverview> {
+        return documentRepo.getDocumentOverviews()
+    }
+
+    fun getDocumentOverview(documentId: String): DocumentOverview {
+        return documentRepo.getDocumentOverview(documentId) ?: throw DocumentNotFoundException(documentId)
     }
 
     fun submit(operationWrapper: OperationWrapper, userSession: SocketIOClient): Pair<Int, List<TextOperation>>? {
@@ -84,7 +93,7 @@ class DocumentService(
             }
             return Pair(request.revision, ops)
         }
-        return null
+        return Pair(-1, emptyList())
     }
 
     fun tryApply(
@@ -93,7 +102,12 @@ class DocumentService(
         val ops = request.transform()
 
         ops.forEach {
-            request.apply(it)
+            try {
+                request.apply(it)
+            } catch (e: InvalidOperationException) {
+                logger.error("Error occurred while applying operation {}. Message: {}", it, e.message)
+                return false
+            }
         }
 
         return documentRepo.compareAndSet(request.snapshot.id, request.snapshot.revision, request.getTransformed())
@@ -103,7 +117,7 @@ class DocumentService(
         val snapshot = documentRepo.getDocument(selection.docId) ?: return null
 
         if (selection.revision > snapshot.revision) {
-            throw InvalidOperationRevision(
+            throw InvalidOperationRevisionException(
                 "Attempted to perform operation with greater revision (${selection.revision}) than current document revision ${snapshot.revision}"
             )
         }
