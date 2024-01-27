@@ -2,7 +2,7 @@ package net.kvibews.service
 
 import com.corundumstudio.socketio.SocketIOClient
 import net.kvibews.config.ApplicationProperties
-import net.kvibews.core.document.InvalidOperationException
+import net.kvibews.core.document.OperationExecutionException
 import net.kvibews.core.document.SubmitRequest
 import net.kvibews.dto.DocumentDTO
 import net.kvibews.exception.DocumentNotFoundException
@@ -103,7 +103,7 @@ class DocumentService(
         ops.forEach {
             try {
                 request.apply(it)
-            } catch (e: InvalidOperationException) {
+            } catch (e: OperationExecutionException) {
                 logger.error("Error occurred while applying operation {}. Message: {}", it, e.message)
                 return false
             }

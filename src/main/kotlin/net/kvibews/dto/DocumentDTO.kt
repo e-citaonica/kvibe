@@ -7,7 +7,7 @@ object DocumentDTO {
 
     data class Create(
         val name: String,
-        val language: Int,
+        val language: String,
     )
 
     data class UserInfo(

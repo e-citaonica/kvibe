@@ -1,9 +1,9 @@
 package net.kvibews.core.operation_transformations.impl
 
-import net.kvibews.model.enum.OperationType
+import net.kvibews.core.operation_transformations.OperationTransformations
 import net.kvibews.model.TextOperation
 import net.kvibews.model.TextSelection
-import net.kvibews.core.operation_transformations.OperationTransformations
+import net.kvibews.model.enum.OperationType
 import org.slf4j.Logger
 import org.springframework.stereotype.Component
 
@@ -126,8 +126,8 @@ class StringOperationTransformations(val logger: Logger) : OperationTransformati
             )
         }
         // delete starts before selection and ends in middle of selection
-        else if (op.position < selection.from && opEnd > selection.from && opEnd < selection.to) {
-            val overlapFromStartOfSelection = selection.from - op.position;
+        else if (op.position < selection.from && opEnd < selection.to) {
+            val overlapFromStartOfSelection = selection.from - op.position
             TextSelection(
                 selection.docId,
                 selection.revision,

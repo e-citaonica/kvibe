@@ -2,8 +2,6 @@ package net.kvibews.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.util.JSONPObject
-import io.swagger.v3.core.util.Json
 import net.kvibews.config.ApplicationProperties
 import net.kvibews.model.DocumentPreview
 import net.kvibews.model.DocumentState
@@ -14,7 +12,7 @@ import org.redisson.codec.JacksonCodec
 import org.redisson.codec.TypedJsonJacksonCodec
 import org.springframework.stereotype.Repository
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 

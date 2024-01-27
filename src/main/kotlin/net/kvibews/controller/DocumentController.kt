@@ -1,8 +1,8 @@
 package net.kvibews.controller
 
-import net.kvibews.model.DocumentState
 import net.kvibews.dto.DocumentDTO
 import net.kvibews.model.DocumentPreview
+import net.kvibews.model.DocumentState
 import net.kvibews.service.DocumentService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,7 +18,6 @@ class DocumentController(val documentService: DocumentService) {
 
     @GetMapping("/overview")
     fun getDocumentOverviews(): ResponseEntity<List<DocumentPreview>> {
-        val a = documentService.getDocumentPreviews()
         return ResponseEntity.ok(documentService.getDocumentPreviews())
     }
 
