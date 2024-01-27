@@ -44,8 +44,7 @@ class DocumentService(
     fun createDocument(createDocument: DocumentDTO.Create): DocumentState {
         val documentId = UUID.randomUUID().toString()
         val document = DocumentState(documentId, createDocument.name, createDocument.language)
-        documentRepo.setDocumentPreview(documentId, DocumentPreview(document))
-        documentRepo.setDocument(documentId, document)
+        documentRepo.setDocument(documentId, document, DocumentPreview(document, 30))
         return document
     }
 
@@ -110,7 +109,13 @@ class DocumentService(
             }
         }
 
-        return documentRepo.compareAndSet(request.snapshot.id, request.snapshot.revision, request.getTransformed())
+        val transformed = request.getTransformed()
+        return documentRepo.compareAndSet(
+            request.snapshot.id,
+            request.snapshot.revision,
+            transformed,
+            DocumentPreview(transformed, 30).content
+        )
     }
 
     fun transform(selection: TextSelection): TextSelection? {
