@@ -2,7 +2,7 @@ package net.kvibews.controller
 
 import net.kvibews.model.DocumentState
 import net.kvibews.dto.DocumentDTO
-import net.kvibews.model.DocumentOverview
+import net.kvibews.model.DocumentPreview
 import net.kvibews.service.DocumentService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -12,18 +12,18 @@ import org.springframework.web.bind.annotation.*
 class DocumentController(val documentService: DocumentService) {
 
     @GetMapping
-    fun getDoc(): ResponseEntity<List<DocumentState>> {
+    fun getDoc(): ResponseEntity<List<DocumentPreview>> {
         return ResponseEntity.ok(documentService.getAllDocuments())
     }
 
     @GetMapping("/overview")
-    fun getDocumentOverviews(): ResponseEntity<List<DocumentOverview>> {
-        val a = documentService.getDocumentOverviews()
-        return ResponseEntity.ok(documentService.getDocumentOverviews())
+    fun getDocumentOverviews(): ResponseEntity<List<DocumentPreview>> {
+        val a = documentService.getDocumentPreviews()
+        return ResponseEntity.ok(documentService.getDocumentPreviews())
     }
 
     @GetMapping("/overview/{id}")
-    fun getDocumentOverview(@PathVariable id: String): ResponseEntity<DocumentOverview> {
+    fun getDocumentOverview(@PathVariable id: String): ResponseEntity<DocumentPreview> {
         return ResponseEntity.ok(documentService.getDocumentOverview(id))
     }
 

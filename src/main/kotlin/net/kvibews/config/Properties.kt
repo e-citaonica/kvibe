@@ -31,7 +31,7 @@ class ApplicationProperties(
 ) {
     class Operation(
         var maxNumberOfRetries: Int = 4,
-        var staleDocumentExpiry: Int = 7200
+        var staleDocumentExpiry: Long = 7200
     )
 }
 

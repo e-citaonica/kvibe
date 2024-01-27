@@ -13,7 +13,6 @@ import net.kvibews.repository.DocumentRepository
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
-import java.time.ZonedDateTime
 import java.util.*
 
 
@@ -38,13 +37,14 @@ class DocumentService(
         return documentRepo.getActiveUser(documentId, sessionId)
     }
 
-    fun getAllDocuments(): List<DocumentState> {
-        return documentRepo.getDocuments()
+    fun getAllDocuments(): List<DocumentPreview> {
+        return documentRepo.getDocumentPreviews()
     }
 
     fun createDocument(createDocument: DocumentDTO.Create): DocumentState {
         val documentId = UUID.randomUUID().toString()
         val document = DocumentState(documentId, createDocument.name, createDocument.language)
+        documentRepo.setDocumentPreview(documentId, DocumentPreview(document))
         documentRepo.setDocument(documentId, document)
         return document
     }
@@ -53,11 +53,11 @@ class DocumentService(
         return documentRepo.getDocument(documentId) ?: throw DocumentNotFoundException(documentId)
     }
 
-    fun getDocumentOverviews(): List<DocumentOverview> {
-        return documentRepo.getDocumentOverviews()
+    fun getDocumentPreviews(): List<DocumentPreview> {
+        return documentRepo.getDocumentPreviews()
     }
 
-    fun getDocumentOverview(documentId: String): DocumentOverview {
+    fun getDocumentOverview(documentId: String): DocumentPreview {
         return documentRepo.getDocumentOverview(documentId) ?: throw DocumentNotFoundException(documentId)
     }
 

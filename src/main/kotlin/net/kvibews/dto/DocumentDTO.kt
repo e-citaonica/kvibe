@@ -1,16 +1,13 @@
 package net.kvibews.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import net.kvibews.model.DocumentOverview
-import java.time.ZonedDateTime
 
 
 object DocumentDTO {
 
     data class Create(
         val name: String,
-        val language: String,
-        val username: String
+        val language: Int,
     )
 
     data class UserInfo(

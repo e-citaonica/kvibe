@@ -64,7 +64,7 @@ class SubmitRequest(
         revision = revision,
         operations = operations,
         id = snapshot.id,
-        language = snapshot.language,
+        languageId = snapshot.languageId,
         name = snapshot.name,
         createdAt = snapshot.createdAt,
         updatedAt = ZonedDateTime.now(),

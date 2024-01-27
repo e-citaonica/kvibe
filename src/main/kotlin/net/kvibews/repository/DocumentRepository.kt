@@ -3,7 +3,7 @@ package net.kvibews.repository
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import net.kvibews.config.ApplicationProperties
-import net.kvibews.model.DocumentOverview
+import net.kvibews.model.DocumentPreview
 import net.kvibews.model.DocumentState
 import org.redisson.api.*
 import org.redisson.client.codec.StringCodec
@@ -12,6 +12,7 @@ import org.redisson.codec.JacksonCodec
 import org.redisson.codec.TypedJsonJacksonCodec
 import org.springframework.stereotype.Repository
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 
 @Repository
@@ -21,15 +22,18 @@ class DocumentRepository(
     private val properties: ApplicationProperties
 ) {
     val documentCodec = JacksonCodec(mapper, DocumentState::class.java)
+    val docPreviewCodec = JacksonCodec(mapper, DocumentPreview::class.java)
 
     companion object {
         const val DOCUMENT = "document"
-        const val USERS_DOCUMENT = "users:document"
+        const val DOCUMENT_PREVIEW = "document:preview"
+        const val DOCUMENT_USERS = "document:users"
         const val DOCUMENTS = "documents"
     }
 
     fun setDocument(docId: String, value: DocumentState) {
-        return redisson.getDocumentJsonBucket(documentCodec, docId).set(value)
+        return redisson.getDocumentJsonBucket(documentCodec, docId)
+            .set(value, properties.operation.staleDocumentExpiry, TimeUnit.SECONDS)
     }
 
     fun getDocument(docId: String): DocumentState? {
@@ -37,62 +41,58 @@ class DocumentRepository(
     }
 
     fun addActiveUser(docId: String, sessionId: UUID, username: String): Boolean {
-        return redisson.getMap<String, String>("$USERS_DOCUMENT:$docId").fastPut(sessionId.toString(), username)
+        return redisson.getMap<String, String>("$DOCUMENT_USERS:$docId").fastPut(sessionId.toString(), username)
     }
 
     fun removeActiveUser(docId: String, sessionId: UUID): Boolean {
-        return redisson.getMap<String, String>("$USERS_DOCUMENT:$docId").remove(sessionId.toString()) != null
+        return redisson.getMap<String, String>("$DOCUMENT_USERS:$docId").remove(sessionId.toString()) != null
     }
 
-    fun getDocumentOverviews(): List<DocumentOverview> {
-        return redisson
-            .getMap<String, DocumentOverview>(
-                DOCUMENTS,
-                getMapCodec<DocumentOverview>(mapper)
-            )
-            .values.toList()
+    fun getDocumentPreview(docId: String): DocumentPreview {
+        return redisson.getJsonBucket("$DOCUMENT_PREVIEW:$docId", docPreviewCodec).get()
     }
 
-    fun setDocumentOverview(docId: String, overview: DocumentOverview): Boolean {
-        return redisson
-            .getMap<String, DocumentOverview>(
-                DOCUMENTS,
-                getMapCodec<DocumentOverview>(mapper)
-            )
-            .put(docId, overview) != null
+    fun setDocumentPreview(docId: String, overview: DocumentPreview) {
+        redisson.getJsonBucket("$DOCUMENT_PREVIEW:$docId", docPreviewCodec)
+            .set(overview, properties.operation.staleDocumentExpiry, TimeUnit.SECONDS)
     }
 
-    fun getActiveUsersCount(docId: String): Int? {
-        return redisson.getMap<String, String>("$USERS_DOCUMENT:$docId").size
+    fun getContentSnippet(docId: String, snippetLength: Int): String {
+        return redisson.getDocumentJsonBucket(documentCodec, docId)
+            .get(StringCodec.INSTANCE, "$.content")
+            .substring(0, snippetLength)
     }
 
-    fun getDocuments(): List<DocumentState> {
-        val pattern = "$DOCUMENT*"
-        val keysByPattern = redisson.keys.getKeysByPattern("$DOCUMENT*")
-        val documents: MutableList<DocumentState> = mutableListOf()
-        keysByPattern.forEach {
-            val document = redisson.getDocumentJsonBucket(documentCodec, it.substring(pattern.length)).get()
-            if (document != null) {
-                documents.add(document)
+    fun getDocumentPreviews(): List<DocumentPreview> {
+        val keysByPattern = redisson.keys.getKeysByPattern("$DOCUMENT_PREVIEW*").toList()
+
+        return if (keysByPattern.isEmpty())
+            emptyList()
+        else {
+            val futures = mutableListOf<RFuture<DocumentPreview>>()
+            val batch = redisson.createBatch()
+            keysByPattern.forEach {key ->
+                futures.add(batch.getJsonBucket(key, docPreviewCodec).async)
             }
+            batch.execute()
+            futures.mapNotNull { r -> r.get() }.toList()
         }
-        return documents.toList()
     }
 
-    fun getDocumentOverview(docId: String): DocumentOverview? {
+    fun getDocumentOverview(docId: String): DocumentPreview? {
         return redisson
-            .getMap<String, DocumentOverview>(
+            .getMap<String, DocumentPreview>(
                 DOCUMENTS,
-                getMapCodec<DocumentOverview>(mapper)
+                getMapCodec<DocumentPreview>(mapper)
             )[docId]
     }
 
     fun getActiveUsers(docId: String, username: String): List<String> {
-        return redisson.getMap<String, String>("$USERS_DOCUMENT:$docId").values.toList()
+        return redisson.getMap<String, String>("$DOCUMENT_USERS:$docId").values.toList()
     }
 
     fun getActiveUser(docId: String, sessionId: UUID): String? {
-        return redisson.getMap<String, String>("$USERS_DOCUMENT:$docId")[sessionId.toString()]
+        return redisson.getMap<String, String>("$DOCUMENT_USERS:$docId")[sessionId.toString()]
     }
 
     fun compareAndSet(docId: String, expectedRevision: Int, snapshot: DocumentState): Boolean {
@@ -106,6 +106,7 @@ class DocumentRepository(
                     if docJson.revision == r then
                         redis.call("JSON.SET", KEYS[1], "$", ARGV[2]);
                         redis.call("EXPIRE", KEYS[1], tonumber(ARGV[3]));
+                        redis.call("EXPIRE", KEYS[2], tonumber(ARGV[3])); 
                         return true;
                     else
                         return false;
@@ -115,7 +116,7 @@ class DocumentRepository(
                 end;
             """,
             RScript.ReturnType.BOOLEAN,
-            listOf("${DOCUMENT}:${docId}"),
+            listOf("${DOCUMENT}:${docId}", "${DOCUMENT_PREVIEW}:${docId}"),
             expectedRevision.toString(),
             mapper.writeValueAsString(snapshot),
             properties.operation.staleDocumentExpiry.toString()
@@ -124,7 +125,7 @@ class DocumentRepository(
 
 }
 
-fun RedissonClient.getDocumentJsonBucket(codec: JacksonCodec<DocumentState>, docId: String): RBucket<DocumentState> {
+fun RedissonClient.getDocumentJsonBucket(codec: JacksonCodec<DocumentState>, docId: String): RJsonBucket<DocumentState> {
     return this.getJsonBucket("${DocumentRepository.DOCUMENT}:${docId}", codec)
 }
 
